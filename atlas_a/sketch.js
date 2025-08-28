@@ -4,9 +4,12 @@ import './linearalgebra.js';
 const canvasWidth = 400;
 const canvasHeight = 500;
 const margin = 40;
-let lineCount = 15;
-let skew = 1.5;
 
+const maxCurveDistance = 50;
+const drawCurves = false;
+
+let lineCount = 45;
+let skew = 1.5;
 let letterPG;
 
 class Point {
@@ -37,19 +40,26 @@ function setup() {
 }
 
 function draw() {
-  background(220);
+  background('white');
 
   letterPG.background('white');
 
   drawLetter(letterPG);
+
+  //I think I'm drawing one image on top of another forever? 
+  //Should replace the image instead right?
   image(letterPG, margin, margin);
 }
 
+//used for debugging
 function drawPoint(pg, point) {
   pg.circle(point.x, point.y, 5);
 }
 
 function drawLine(pg, l) {
+  c1 = color(255);
+  c2 = color(63, 191, 191);
+
   pg.line(l.origin.x, l.origin.y, l.dest.x, l.dest.y);
 }
 
@@ -77,22 +87,9 @@ function generateLinePoints(line, numPoints) {
   return linePoints;
 }
 
-
-
-function drawLetter(pg) {
-  const apexPoint = new Point(pg.width / 2, 0);
-  const pointLeft = new Point(0, pg.height);
-  const pointRight = new Point(pg.width, pg.height);
-
-  //start by creating the base lines
-  const lineLeft = new Line(pointLeft, apexPoint);
-  drawLine(pg, lineLeft); //not sure about drawing these tbh
-
-  const lineRight = new Line(pointRight, apexPoint);
-  drawLine(pg, lineRight);
-
+function drawConnectingLines(pg, edgeA, center, edgeB) {
   const mouseCoords = new Point(mouseX, mouseY);
-  const mouseIsInTriangle = pointInTriangle(mouseCoords, apexPoint, pointLeft, pointRight);
+  const mouseIsInTriangle = pointInTriangle(mouseCoords, center, edgeA, edgeB);
 
   //decide how many lines to draw
   if (mouseIsPressed) {
@@ -102,51 +99,78 @@ function drawLetter(pg) {
       lineCount -= 1;
     }
 
-    //squishy skew on how the lines are placed
-    const proportion = mouseY / canvasHeight;
-    const skewRange = 2;
-    skew = 1 + (skewRange * proportion);
+    //map mouseY's height to a skew value between 1 and 3
+    skew = map(mouseY, 0, canvasHeight, 1, 3);
   }
 
   //find N points along each leg
-  const linePointsLeft = generateLinePoints(lineLeft, lineCount);
-  const linePointsRight = generateLinePoints(lineRight, lineCount);
+  const linePointsLeft = generateLinePoints(new Line(edgeA, center), lineCount);
+  const linePointsRight = generateLinePoints(new Line(edgeB, center), lineCount);
 
   //draw lines between the points
-  const connectingLines = [];
   for (let i = 0; i < linePointsLeft.length; ++i) {
     const lineStart = linePointsLeft[i];
     const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
 
     const newLine = new Line(lineStart, lineEnd);
 
-    //to draw the straight lines:
-    // drawLine(pg, newLine);
+    if (drawCurves) {
+      //determine which point along that line is closest to the mouse location
+      const pointNearestMouse = linePointNearestToPoint(mouseCoords, newLine);
 
-    const pointNearestMouse = linePointNearestToPoint(mouseCoords, newLine);
+      if (i < linePointsLeft.length / 2) {
+        // drawPoint(pg, pointNearestMouse); //FUN use this for lerping color
+      }
 
-    drawPoint(pg, pointNearestMouse); //FUN use this for lerping color
-    if (i < linePointsLeft.length / 2) {
+      //create a line between that point and the mouse location
+      lineToMouse = new Line(pointNearestMouse, mouseCoords);
+      let curveDistance = lineLength(lineToMouse);
+
+      if (lineLength(lineToMouse) > maxCurveDistance) {
+        curveDistance = maxCurveDistance;
+      }
+      //create a point some distance along that line to be the control for the bezier curve
+      const controlPoint = pointAlongLine(pointNearestMouse, mouseCoords, curveDistance);
+      drawCurve(pg, new Curve(lineStart, lineEnd, controlPoint));
+
+    } else {
+      drawLine(pg, newLine);
     }
-
-    lineToMouse = new Line(pointNearestMouse, mouseCoords);
-    let curveDistance = lineLength(lineToMouse);
-    const maxCurveDistance = 25;
-
-    if (lineLength(lineToMouse) > maxCurveDistance) {
-      curveDistance = maxCurveDistance;
-    }
-
-    const controlPoint = pointAlongLine(pointNearestMouse, mouseCoords, curveDistance);
-    drawCurve(pg, new Curve(lineStart, lineEnd, controlPoint));
-
-    connectingLines.push(newLine);
   }
+}
+
+
+function drawLetter(pg) {
+  const apexPoint = new Point(pg.width / 2, 0);
+  const pointLeft = new Point(0, pg.height);
+  const pointRight = new Point(pg.width, pg.height);
+
+  //start by drawing the outside lines
+  const lineLeft = new Line(pointLeft, apexPoint);
+  const lineRight = new Line(pointRight, apexPoint);
+
+  pg.strokeWeight(3);
+  drawLine(pg, lineLeft);
+  drawLine(pg, lineRight);
+  pg.strokeWeight(1);
+
+  drawConnectingLines(pg, pointLeft, apexPoint, pointRight);
+}
+
+function SPIDERMODE(pg) {
+  //find center
+  //draw a circle
+  //generate N points along circle
+  //for each draw a lil web
+  //deploy dancing spider gif
 }
 
 /**
  * So now to make it cool and pretty. Ideas:
+ * - add a switch for going between lines and curves
  * - colors! line weights! lerping!
- * - bezier curves for all lines
  * - SPIDER MODE
+ * - uke mode? each line is a string with its own note?
+ * - linear algebra mode
+ * - rave mode: has the gradient lerping
  */
