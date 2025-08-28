@@ -6,11 +6,12 @@ const canvasHeight = 500;
 const margin = 40;
 
 const maxCurveDistance = 50;
-const drawCurves = false;
+const drawCurves = true;
 
-let lineCount = 45;
+let lineCount = 0;
 let skew = 1.5;
 let letterPG;
+
 
 class Point {
   constructor(x, y) {
@@ -146,12 +147,9 @@ function drawLetter(pg) {
   const pointRight = new Point(pg.width, pg.height);
 
   //start by drawing the outside lines
-  const lineLeft = new Line(pointLeft, apexPoint);
-  const lineRight = new Line(pointRight, apexPoint);
-
   pg.strokeWeight(3);
-  drawLine(pg, lineLeft);
-  drawLine(pg, lineRight);
+  drawLine(pg, new Line(pointLeft, apexPoint));
+  drawLine(pg, new Line(pointRight, apexPoint));
   pg.strokeWeight(1);
 
   drawConnectingLines(pg, pointLeft, apexPoint, pointRight);
@@ -166,8 +164,20 @@ function SPIDERMODE(pg) {
 }
 
 /**
+ * Next steps:
+ * - animation: curves fall back to being straight lines. curves follow mouse when mouse is pressed.
+ * - list of global "ConnectingLine" object. Each object has:
+ *    - start/end points
+ *    - current control point
+ *    - target control point (this is the point on the original line that was closest to the mouse coords)
+ *    - advanceDistance: distance control point should be moved on the next render
+ * - list is cleared and redrawn if mouse is currently pressed, otherwise advance() and draw()
+ * - advance(): move current control point N closer to target control point (n can be variable- slow and then speed up, or the other way around), then update N
+ * - render(): create the curve with the given control point
+ * 
  * So now to make it cool and pretty. Ideas:
  * - add a switch for going between lines and curves
+ * - animation: curves fall back to being straight lines. curves follow mouse when pressed.
  * - colors! line weights! lerping!
  * - SPIDER MODE
  * - uke mode? each line is a string with its own note?
