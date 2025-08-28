@@ -1,0 +1,71 @@
+function sign(p1, p2, p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) -
+        (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+
+//function detecting whether the mouse is within the bounds of the "A" triangle, provided by chatGPT
+function pointInTriangle(pt, v1, v2, v3) {
+    let d1 = sign(pt, v1, v2);
+    let d2 = sign(pt, v2, v3);
+    let d3 = sign(pt, v3, v1);
+
+    let hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    let hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(hasNeg && hasPos);
+}
+
+//a whole bunch of linear algebra provided by chatGPT
+function linePointNearestToPoint(pt, line) {
+    const ax = line.origin.x;
+    const ay = line.origin.y;
+    const bx = line.dest.x;
+    const by = line.dest.y;
+
+    const px = pt.x;
+    const py = pt.y;
+
+    // vector AB
+    const abx = bx - ax;
+    const aby = by - ay;
+
+    // vector AP
+    const apx = px - ax;
+    const apy = py - ay;
+
+    // project AP onto AB, computing parameter t along AB
+    const ab2 = abx * abx + aby * aby; // length squared of AB
+    let t = (apx * abx + apy * aby) / ab2;
+
+    // clamp t to the segment [0,1]
+    t = max(0, min(1, t));
+
+    // nearest point = A + t * AB
+    return new Point(ax + abx * t, ay + aby * t);
+}
+
+function lineLength(l) {
+    var a = l.origin.x - l.dest.x;
+    var b = l.origin.y - l.dest.y;
+
+    return Math.sqrt(a * a + b * b);
+}
+
+//MOAR linear algebra
+function pointAlongLine(start, end, distance) {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = sqrt(dx * dx + dy * dy);
+
+    // avoid divide by zero
+    if (length === 0) return { x: start.x, y: start.y };
+
+    const ux = dx / length;
+    const uy = dy / length;
+
+    return {
+        x: start.x + ux * distance,
+        y: start.y + uy * distance
+    };
+}
