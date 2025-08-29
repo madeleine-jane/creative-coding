@@ -69,3 +69,26 @@ function pointAlongLine(start, end, distance) {
         y: start.y + uy * distance
     };
 }
+
+function pointTowards(a, b, n) {
+    // vector from A to B
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+
+    // distance between A and B
+    let dist = Math.hypot(dx, dy);
+
+    if (dist === 0) {
+        // A and B are the same point
+        return { x: a.x, y: a.y };
+    }
+
+    // unit vector scaled by N
+    let ux = dx / dist;
+    let uy = dy / dist;
+
+    return {
+        x: a.x + ux * n,
+        y: a.y + uy * n
+    };
+}

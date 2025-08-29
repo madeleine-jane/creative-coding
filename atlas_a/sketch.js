@@ -5,13 +5,21 @@ const canvasWidth = 400;
 const canvasHeight = 500;
 const margin = 40;
 
-const maxCurveDistance = 50;
+const maxCurveDistance = 100;
 const drawCurves = true;
 
-let lineCount = 0;
+let lineCount = 25;
 let skew = 1.5;
 let letterPG;
 
+let connectingLines = [];
+
+const Modes = Object.freeze({
+  LINES: Symbol("lines"),
+  CURVES: Symbol("curves"),
+  ANIMATED_CURVES: Symbol("animated_curves"),
+  SPIDER: Symbol("spider")
+});
 
 class Point {
   constructor(x, y) {
@@ -35,9 +43,36 @@ class Curve {
   }
 }
 
+class AnimatedCurve {
+  constructor(origin, dest, control, target) {
+    this.originPoint = origin;
+    this.destPoint = dest;
+    this.currentControlPoint = control;
+    this.controlTargetPoint = target;
+    this.fallDistance = 1.1;
+  }
+  advance() {
+    const distToTarget = lineLength(new Line(this.currentControlPoint, this.controlTargetPoint));
+    if (distToTarget < 1) {
+      return;
+    }
+    this.currentControlPoint = pointTowards(this.currentControlPoint, this.controlTargetPoint, min(distToTarget, this.fallDistance));
+    this.fallDistance = pow(this.fallDistance, 1.5);
+
+  }
+  draw(pg) {
+    pg.noFill();
+    pg.beginShape();
+    pg.vertex(this.originPoint.x, this.originPoint.y);
+    pg.quadraticVertex(this.currentControlPoint.x, this.currentControlPoint.y, this.destPoint.x, this.destPoint.y); // curve
+    pg.endShape();
+  }
+}
+
 function setup() {
   createCanvas(canvasWidth, canvasHeight);
   letterPG = createGraphics(canvasWidth - (margin * 2), canvasHeight - (margin * 2));
+
 }
 
 function draw() {
@@ -88,6 +123,45 @@ function generateLinePoints(line, numPoints) {
   return linePoints;
 }
 
+//TODO refactor to support lines, curves that follow mouse and animated curves
+//TODO model stuff falling more accurately
+function generateConnectingCurves(mouseCoords, linePointsLeft, linePointsRight) {
+  let newConnectingLines = [];
+  for (let i = 0; i < linePointsLeft.length; ++i) {
+    const lineStart = linePointsLeft[i];
+    const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
+
+    const newLine = new Line(lineStart, lineEnd);
+
+    //determine which point along that line is closest to the mouse location
+    const pointNearestMouse = linePointNearestToPoint(mouseCoords, newLine);
+
+    if (i < linePointsLeft.length / 2) {
+      // drawPoint(pg, pointNearestMouse); //FUN use this for lerping color
+    }
+
+    //create a line between that point and the mouse location
+    lineToMouse = new Line(pointNearestMouse, mouseCoords);
+    let curveDistance = lineLength(lineToMouse);
+
+    if (lineLength(lineToMouse) > maxCurveDistance) {
+      curveDistance = maxCurveDistance;
+    }
+    //create a point some distance along that line to be the control for the bezier curve
+    const controlPoint = pointAlongLine(pointNearestMouse, mouseCoords, curveDistance);
+
+
+    newConnectingLines.push(new AnimatedCurve(lineStart, lineEnd, controlPoint, pointNearestMouse));
+
+    // if (drawCurves) {
+    //   drawCurve(pg, new Curve(lineStart, lineEnd, controlPoint));
+    // } else {
+    //   drawLine(pg, newLine);
+    // }
+  }
+  return newConnectingLines;
+}
+
 function drawConnectingLines(pg, edgeA, center, edgeB) {
   const mouseCoords = new Point(mouseX, mouseY);
   const mouseIsInTriangle = pointInTriangle(mouseCoords, center, edgeA, edgeB);
@@ -109,35 +183,14 @@ function drawConnectingLines(pg, edgeA, center, edgeB) {
   const linePointsRight = generateLinePoints(new Line(edgeB, center), lineCount);
 
   //draw lines between the points
-  for (let i = 0; i < linePointsLeft.length; ++i) {
-    const lineStart = linePointsLeft[i];
-    const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
-
-    const newLine = new Line(lineStart, lineEnd);
-
-    if (drawCurves) {
-      //determine which point along that line is closest to the mouse location
-      const pointNearestMouse = linePointNearestToPoint(mouseCoords, newLine);
-
-      if (i < linePointsLeft.length / 2) {
-        // drawPoint(pg, pointNearestMouse); //FUN use this for lerping color
-      }
-
-      //create a line between that point and the mouse location
-      lineToMouse = new Line(pointNearestMouse, mouseCoords);
-      let curveDistance = lineLength(lineToMouse);
-
-      if (lineLength(lineToMouse) > maxCurveDistance) {
-        curveDistance = maxCurveDistance;
-      }
-      //create a point some distance along that line to be the control for the bezier curve
-      const controlPoint = pointAlongLine(pointNearestMouse, mouseCoords, curveDistance);
-      drawCurve(pg, new Curve(lineStart, lineEnd, controlPoint));
-
-    } else {
-      drawLine(pg, newLine);
-    }
+  if (mouseIsPressed || connectingLines.length == 0) { //length is 0 on startup
+    connectingLines = generateConnectingCurves(mouseCoords, linePointsLeft, linePointsRight);
   }
+  for (let i = 0; i < connectingLines.length; ++i) {
+    connectingLines[i].advance();
+    connectingLines[i].draw(pg);
+  }
+
 }
 
 
