@@ -2,22 +2,28 @@
 import './linearalgebra.js';
 import './objects.js';
 import './renderers.js';
-import './libraries/verlet-1.0.0.js'
-import VerletJS from './libraries/verlet-1.0.0.js';
 
+/**
+ * README:
+ * Welcome to my funky little A!
+ * Click and hold mouse within the A to generate more lines, and outside the A to generate fewer lines.
+ * Drag mouse up and down to change the A's shape. 
+ * Double click to toggle rave mode. 
+ */
 
+// Here are the modes you can try!
 const ConnectorMode = Object.freeze({
-  LINES: Symbol("lines"),
-  CURVES: Symbol("curves"),
-  ANIMATED_CURVES: Symbol("animated_curves"),
-  ROPE: Symbol("rope")
+  LINES: Symbol("lines"), //straight lines that don't move
+  CURVES: Symbol("curves"), //curves that follow the mouse
+  ANIMATED_CURVES: Symbol("animated_curves"), //drag and drop the curves with the mouse
 });
 
-const canvasWidth = 400;
-const canvasHeight = 500;
-const margin = 40;
-
+// Modify me to switch between modes!
 const connectorMode = ConnectorMode.ANIMATED_CURVES;
+
+const canvasHeight = 500;
+const canvasWidth = 400;
+const margin = 40;
 
 let lineCount = 0;
 let skew = 1.5;
@@ -25,18 +31,9 @@ let letterPG;
 
 let connectionRenderer;
 
+let raveMode = false;
+let rave;
 
-class RopeRenderer {
-  render(pg, mouseCoords, linePointsLeft, linePointsRight) {
-    for (let i = 0; i < linePointsLeft.length; ++i) {
-      const lineStart = linePointsLeft[i];
-      const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
-
-
-      //TODO using verlet.js, create a line between lineStart and lineEnd
-    }
-  }
-}
 
 function setup() {
   createCanvas(canvasWidth, canvasHeight);
@@ -44,28 +41,26 @@ function setup() {
   switch (connectorMode) {
     case ConnectorMode.LINES:
       connectionRenderer = new StraightLineRenderer();
-      lineCount = 25;
       break;
     case ConnectorMode.CURVES:
       connectionRenderer = new CurveRenderer();
-      lineCount = 50;
       break;
     case ConnectorMode.ANIMATED_CURVES:
       connectionRenderer = new AnimatedCurveRenderer();
-      lineCount = 100;
       break;
-    case ConnectorMode.ROPE:
-      connectionRenderer = new RopeRenderer();
-      lineCount = 40;
-
   }
+  rave = new Rave();
 }
 
 function draw() {
-  background('white');
+  let backgroundColor = color('white');
+  if (raveMode) {
+    backgroundColor = color('black');
+  }
+  background(backgroundColor);
+  letterPG.background(backgroundColor);
 
-  letterPG.background('white');
-
+  rave.advanceColors();
   drawLetter(letterPG);
 
   //I think I'm drawing one image on top of another forever? 
@@ -131,14 +126,7 @@ function drawLetter(pg) {
   drawConnectingLines(pg, pointLeft, apexPoint, pointRight);
 }
 
+function doubleClicked() {
+  raveMode = !raveMode;
+}
 
-/**
- * So now to make it cool and pretty. Ideas:
- * - add a switch for going between lines and curves
- * - animation: curves fall back to being straight lines. curves follow mouse when pressed.
- * - colors! line weights! lerping!
- * - SPIDER MODE
- * - uke mode? each line is a string with its own note?
- * - linear algebra mode
- * - rave mode: has the gradient lerping
- */

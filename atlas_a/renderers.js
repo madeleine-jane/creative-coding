@@ -1,28 +1,59 @@
 
+//Persist state in each renderer
+//V1: single near and far color, each line color is lerped betwixt
+//V2: shift the near and far color over time
+//V3: also rave music starts playing
+
+
+function setLineColors(lines, mouseCoords) {
+    //sort from nearest mouse to furthest
+    //lerp val = dist/furthest dist
+    //lines[i].color = lerpColor()
+    //return lines
+
+    lines.sort(function (a, b) {
+        return a.distanceToMouse(mouseCoords) - b.distanceToMouse(mouseCoords);
+    });
+    furthestLineDistance = lines[lines.length - 1].distanceToMouse(mouseCoords);
+
+    for (let i = 0; i < lines.length; ++i) {
+        if (raveMode) {
+            lines[i].color = lerpColor(rave.colorCurrent, rave.complement(), lines[i].distanceToMouse(mouseCoords) / furthestLineDistance);
+        } else {
+            lines[i].color = color('black');
+        }
+    }
+
+    return lines;
+
+}
+
 class StraightLineRenderer {
+    constructor() {
+        lineCount = 25;
+    }
     render(pg, mouseCoords, linePointsLeft, linePointsRight) {
+        let lines = [];
         for (let i = 0; i < linePointsLeft.length; ++i) {
             const lineStart = linePointsLeft[i];
             const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
+            lines.push(new Line(lineStart, lineEnd));
+        }
 
-            const newLine = new Line(lineStart, lineEnd);
-
-            //determine which point along that line is closest to the mouse location
-            const pointNearestMouse = linePointNearestToPoint(mouseCoords, newLine);
-
-            if (i < linePointsLeft.length / 2) {
-                // pointNearestMouse.draw(pg);
-            }
-            newLine.draw(pg);
+        lines = setLineColors(lines, mouseCoords);
+        for (let i = 0; i < lines.length; ++i) {
+            lines[i].draw(pg);
         }
     }
 }
 
 class CurveRenderer {
     constructor() {
+        lineCount = 50;
         this.maxCurveDistance = 50;
     }
     render(pg, mouseCoords, linePointsLeft, linePointsRight) {
+        let lines = [];
         for (let i = 0; i < linePointsLeft.length; ++i) {
             const lineStart = linePointsLeft[i];
             const lineEnd = linePointsRight[(linePointsRight.length - 1) - i];
@@ -43,18 +74,24 @@ class CurveRenderer {
             //create a point some distance along that line to be the control for the bezier curve
             const controlPoint = pointAlongLine(pointNearestMouse, mouseCoords, curveDistance);
 
-            const newCurve = new Curve(lineStart, lineEnd, controlPoint);
-            newCurve.draw(pg);
+            lines.push(new Curve(lineStart, lineEnd, controlPoint));
+        }
+        lines = setLineColors(lines, mouseCoords);
+        for (let i = 0; i < lines.length; ++i) {
+            lines[i].draw(pg);
         }
     }
 }
 
 class AnimatedCurveRenderer {
     constructor() {
+        lineCount = 100;
         this.maxCurveDistance = 500;
         this.connectingLines = [];
     }
 
+    //curves are regenerated if the mouse is being clicked. 
+    //otherwise existing curves will do their thing
     generateConnectingCurves(mouseCoords, linePointsLeft, linePointsRight) {
         let newConnectingLines = [];
         for (let i = 0; i < linePointsLeft.length; ++i) {
@@ -82,10 +119,10 @@ class AnimatedCurveRenderer {
     }
 
     render(pg, mouseCoords, linePointsLeft, linePointsRight) {
-        //draw lines between the points
-        if (mouseIsPressed || this.connectingLines.length == 0) { //length is 0 on startup
+        if (mouseIsPressed || this.connectingLines.length == 0) {
             this.connectingLines = this.generateConnectingCurves(mouseCoords, linePointsLeft, linePointsRight);
         }
+        this.connectingLines = setLineColors(this.connectingLines, mouseCoords);
         for (let i = 0; i < this.connectingLines.length; ++i) {
             this.connectingLines[i].advance();
             this.connectingLines[i].draw(pg);

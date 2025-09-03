@@ -92,3 +92,60 @@ function pointTowards(a, b, n) {
         y: a.y + uy * n
     };
 }
+
+
+//not a linear algebra function but was made by chatgpt so keeping it here
+function rgbToComplement(r, g, b) {
+    // --- Step 1: normalize RGB (0–1 range) ---
+    let rn = r / 255, gn = g / 255, bn = b / 255;
+    let max = Math.max(rn, gn, bn);
+    let min = Math.min(rn, gn, bn);
+    let d = max - min;
+
+    // --- Step 2: convert RGB -> HSV ---
+    let h, s, v = max;
+
+    if (d === 0) {
+        h = 0; // undefined hue
+    } else if (max === rn) {
+        h = ((gn - bn) / d) % 6;
+    } else if (max === gn) {
+        h = (bn - rn) / d + 2;
+    } else {
+        h = (rn - gn) / d + 4;
+    }
+
+    h *= 60;
+    if (h < 0) h += 360;
+
+    s = max === 0 ? 0 : d / max;
+
+    // --- Step 3: rotate hue 180° ---
+    h = (h + 180) % 360;
+
+    // --- Step 4: HSV -> RGB ---
+    let c = v * s;
+    let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    let m = v - c;
+
+    let r1, g1, b1;
+    if (h < 60) {
+        [r1, g1, b1] = [c, x, 0];
+    } else if (h < 120) {
+        [r1, g1, b1] = [x, c, 0];
+    } else if (h < 180) {
+        [r1, g1, b1] = [0, c, x];
+    } else if (h < 240) {
+        [r1, g1, b1] = [0, x, c];
+    } else if (h < 300) {
+        [r1, g1, b1] = [x, 0, c];
+    } else {
+        [r1, g1, b1] = [c, 0, x];
+    }
+
+    let R = Math.round((r1 + m) * 255);
+    let G = Math.round((g1 + m) * 255);
+    let B = Math.round((b1 + m) * 255);
+
+    return color(R, G, B);
+}
