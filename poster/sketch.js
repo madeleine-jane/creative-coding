@@ -102,18 +102,20 @@ class Spider extends Scuttler {
   }
 }
 
+//i have reached a tenuously successful bird simulation
+//i will not touch any more variables
 class Bird extends Scuttler {
   constructor(origin, target) {
     super(origin.x, origin.y);
     this.startingPos = origin;
     this.target = target;
-    this.gravity = createVector(0, 0.08);
+    this.gravity = createVector(0, 0.06);
 
-    this.launchVerticality = getRandomInt(100, 100);
-    this.launchSpeed = getRandomFloat(4, 7);
+    this.launchVerticality = getRandomInt(100, 400);
+    this.launchSpeed = getRandomFloat(6, 8);
 
-    this.steerUp = false;
-
+    this.framesToSteerUp = 0;
+    this.maxForce = 100;
     this.launch();
   }
   launch() {
@@ -127,15 +129,23 @@ class Bird extends Scuttler {
     square(this.position.x, this.position.y, 10);
   }
   scuttle() {
-    if (this.position.y > this.startingPos.y) {
-      this.steerUp = true;
-      // this.launch();
+    if (this.position.y > this.startingPos.y && this.framesToSteerUp == 0) {
+      this.framesToSteerUp = 10;
     }
 
     this.applyForce(this.gravity);
+
+    if (this.framesToSteerUp > 0) {
+      --this.framesToSteerUp;
+      let verticalVector = createVector(0, -1 * this.launchVerticality);
+      verticalVector.setMag(0.1);
+      this.applyForce(verticalVector);
+    }
+
     this.velocity.add(this.acceleration);
     this.position.add(this.velocity);
     this.draw();
+
     this.acceleration.mult(0);
   }
   alive() {
@@ -145,19 +155,18 @@ class Bird extends Scuttler {
 
 
 class BirdSpawner extends Spawner {
-  constructor(spawnOdds) {
-    super(spawnOdds);
-    this.minY = height * 0.1;
-    this.maxY = height * 0.6; //these should be proportional to the canvas height instead of hardcoded
-    this.spawnCountRange = [1, 1];
+  constructor() {
+    super(0.01);
+    this.minY = height * 0.2;
+    this.maxY = height * 0.6;
+    this.spawnCountRange = [1, 2];
 
   }
   chooseOriginAndTarget() {
     let originY = getRandomInt(this.minY, this.maxY);
     let targetY = getRandomInt(originY - 400, originY + 400);
-
     //start the bird before the canvas so it has some time to get going
-    let originX = getRandomInt(-100, 0);
+    let originX = getRandomInt(-200, -100);
     return [createVector(originX, originY), createVector(width, targetY)];
   }
 
@@ -190,8 +199,8 @@ class BirdSpawner extends Spawner {
 let spawner;
 
 function setup() {
-  createCanvas(800, 400);
-  spawner = new BirdSpawner(0.05);
+  createCanvas(600, 900);
+  spawner = new BirdSpawner();
 }
 
 function draw() {
