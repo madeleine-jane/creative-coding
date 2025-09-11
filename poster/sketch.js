@@ -1,4 +1,11 @@
 
+let spawner;
+
+let spiderA;
+let spiderB;
+let birdUp;
+let birdDown;
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -114,8 +121,10 @@ class Bird extends Scuttler {
     this.launchVerticality = getRandomInt(100, 400);
     this.launchSpeed = getRandomFloat(6, 8);
 
+    this.maxSteerUpFrames = 30;
+    this.maxForce = 0.2;
+
     this.framesToSteerUp = 0;
-    this.maxForce = 100;
     this.launch();
   }
   launch() {
@@ -126,19 +135,24 @@ class Bird extends Scuttler {
   }
 
   draw() {
-    square(this.position.x, this.position.y, 10);
+    if (this.framesToSteerUp > 0) { //todo tilt to follow the velocity direction
+      image(birdDown, this.position.x, this.position.y, 25, 25);
+    } else {
+      image(birdUp, this.position.x, this.position.y, 25, 25);
+    }
+    // square(this.position.x, this.position.y, 10);
   }
   scuttle() {
     if (this.position.y > this.startingPos.y && this.framesToSteerUp == 0) {
-      this.framesToSteerUp = 10;
+      this.framesToSteerUp = this.maxSteerUpFrames;
     }
 
     this.applyForce(this.gravity);
 
     if (this.framesToSteerUp > 0) {
       --this.framesToSteerUp;
-      let verticalVector = createVector(0, -1 * this.launchVerticality);
-      verticalVector.setMag(0.1);
+      let verticalVector = createVector(0, -100 * this.launchVerticality);
+      verticalVector.setMag(this.maxForce);
       this.applyForce(verticalVector);
     }
 
@@ -156,7 +170,7 @@ class Bird extends Scuttler {
 
 class BirdSpawner extends Spawner {
   constructor() {
-    super(0.01);
+    super(0.05); //0.1
     this.minY = height * 0.2;
     this.maxY = height * 0.6;
     this.spawnCountRange = [1, 2];
@@ -196,11 +210,19 @@ class BirdSpawner extends Spawner {
 }
 
 
-let spawner;
+
+
+function preload() {
+  spiderA = loadImage('assets/spider_a.png');
+  // spiderB = loadImage('/assets/spider_b.png');
+  // birdUp = loadImage('/assets/bird_up.png');
+  // birdDown = loadImage('/assets/bird_down.png');
+}
 
 function setup() {
   createCanvas(600, 900);
   spawner = new BirdSpawner();
+
 }
 
 function draw() {
