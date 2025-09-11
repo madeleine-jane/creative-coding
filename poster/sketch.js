@@ -135,11 +135,17 @@ class Bird extends Scuttler {
   }
 
   draw() {
+    push();
+
+    translate(this.position.x, this.position.y);
+
     if (this.framesToSteerUp > 0) { //todo tilt to follow the velocity direction
-      image(birdDown, this.position.x, this.position.y, 25, 25);
+      rotate(100); //maybe?
+      image(birdDown, 0, 0, 100, 100);
     } else {
-      image(birdUp, this.position.x, this.position.y, 25, 25);
+      image(birdUp, 0, 0, 100, 100);
     }
+    pop();
     // square(this.position.x, this.position.y, 10);
   }
   scuttle() {
@@ -213,7 +219,8 @@ class BirdSpawner extends Spawner {
 
 
 function preload() {
-  spiderA = loadImage('assets/spider_a.png');
+  birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_up.png');
+  birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_down.png');
   // spiderB = loadImage('/assets/spider_b.png');
   // birdUp = loadImage('/assets/bird_up.png');
   // birdDown = loadImage('/assets/bird_down.png');
