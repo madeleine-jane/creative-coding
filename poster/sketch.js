@@ -177,6 +177,7 @@ class Bird extends Scuttler {
     this.velocity = this.launchVector;
   }
 
+
   draw() {
     push();
 
