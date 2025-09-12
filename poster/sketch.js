@@ -50,15 +50,16 @@ class SpiderSpawner extends Spawner {
   }
 
   chooseSpawnPoint() {
+    //spawn a bit outside the perimeter
     switch (getRandomInt(0, 3)) {
       case 0: //left
-        return createVector(0, getRandomInt(0, height));
+        return createVector(-50, getRandomInt(0, height));
       case 1: //right
-        return createVector(width, getRandomInt(0, height));
+        return createVector(width + 50, getRandomInt(0, height));
       case 2: //top
-        return createVector(getRandomInt(0, width), 0);
+        return createVector(getRandomInt(0, width), -50);
       case 3: //bottom
-        return createVector(getRandomInt(0, width), height);
+        return createVector(getRandomInt(0, width), height + 50);
     }
   }
 
@@ -84,9 +85,28 @@ class Spider extends Scuttler {
     super(x, y);
     this.maxSpeed = 3;
     this.maxForce = 0.1;
+
+    this.switchCountdown = 10;
+    this.useSpiderA = true;
+  }
+
+  resetSwitchCountdown() {
+    this.switchCountdown = 10;
   }
   draw() {
-    circle(this.position.x, this.position.y, 10);
+    --this.switchCountdown;
+    if (this.switchCountdown == 0) {
+      this.resetSwitchCountdown();
+      this.useSpiderA = !this.useSpiderA;
+    }
+    push();
+    translate(this.position.x, this.position.y);
+    if (this.useSpiderA) {
+      image(spiderA, 0, 0, 40, 40);
+    } else {
+      image(spiderB, 0, 0, 40, 40);
+    }
+    pop();
   }
   scuttle() {
     this.target = createVector(mouseX, mouseY); //spiders follow the mouse
@@ -119,12 +139,14 @@ class Bird extends Scuttler {
     this.gravity = createVector(0, 0.06);
 
     this.launchVerticality = getRandomInt(100, 400);
-    this.launchSpeed = getRandomFloat(6, 8);
+    this.launchSpeed = getRandomFloat(7, 10);
 
-    this.maxSteerUpFrames = 30;
-    this.maxForce = 0.2;
+    this.maxSteerUpFrames = 15;
+    this.maxForce = 0.3;
 
     this.framesToSteerUp = 0;
+
+    this.size = getRandomInt(15, 40);
     this.launch();
   }
   launch() {
@@ -139,14 +161,14 @@ class Bird extends Scuttler {
 
     translate(this.position.x, this.position.y);
 
-    if (this.framesToSteerUp > 0) { //todo tilt to follow the velocity direction
-      rotate(100); //maybe?
-      image(birdDown, 0, 0, 100, 100);
+    if (this.framesToSteerUp > 0) {
+      angleMode(DEGREES);
+      rotate(-10);
+      image(birdDown, 0, 0, this.size, this.size);
     } else {
-      image(birdUp, 0, 0, 100, 100);
+      image(birdUp, 0, 0, this.size, this.size);
     }
     pop();
-    // square(this.position.x, this.position.y, 10);
   }
   scuttle() {
     if (this.position.y > this.startingPos.y && this.framesToSteerUp == 0) {
@@ -176,7 +198,7 @@ class Bird extends Scuttler {
 
 class BirdSpawner extends Spawner {
   constructor() {
-    super(0.05); //0.1
+    super(0.01); //0.1
     this.minY = height * 0.2;
     this.maxY = height * 0.6;
     this.spawnCountRange = [1, 2];
@@ -221,13 +243,12 @@ class BirdSpawner extends Spawner {
 function preload() {
   birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_up.png');
   birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_down.png');
-  // spiderB = loadImage('/assets/spider_b.png');
-  // birdUp = loadImage('/assets/bird_up.png');
-  // birdDown = loadImage('/assets/bird_down.png');
+  spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/spider_a.png');
+  spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/spider_b.png');
 }
 
-function setup() {
-  createCanvas(600, 900);
+function setup() { //3/4
+  createCanvas(600, 800);
   spawner = new BirdSpawner();
 
 }
@@ -237,49 +258,9 @@ function draw() {
   spawner.run();
 }
 
-/**
- * 
- *  
- * 
- */
-
-
-
-/**
- * class Particle
- * - position: vector
- * - velocity: vector
- * - acceleration: vector 
- * - draw(): displays image
- *
- * Notes:
- * - Object has goal, or set of goals that it chooses from
- *    - seek a target
- *    - follow a path
- *    - avoid an obstacle
- * - Then steer:
- *   steering force = desired velocity – current velocity 
- *   steering vector = desired velocity - current velocity, at max possible speed (desired.setMag(this.maxspeed))
- *   then apply the force of that vector to the current vector with:
- *      - applyForce(force vector): f=ma, a=f/m, where mass is a const
- *   then have a maximum steering force (the handling, how fast it can turn)
- */
-
 
 /**
 
- * Spider: 
- * - draw spider asset with two frames of movement
- * - design background ("oh god, spiders" in pop vintage font with drop shadow/underlines), draw in paintey style in procreate to match other backgrounds)
- * - mooligat font (find out how to do outline and drop shadow as shown)
- * 
- * Bird:
- * - spawn on the right side of the screen. 
- * - initialize with an up and leftwards velocity at some angle
- * - apply drag and gravity forces
- * - if position gets too low, flap (add upwards acceleration)
- * - mess around with flapping: maybe a lot of little regular flaps?
- * 
  * Fish: 
  * - have some awareness of each other- cohesion, not overlapping (see example)
  * - start on one side of the screen and move towards the other
