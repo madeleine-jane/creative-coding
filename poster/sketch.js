@@ -1,10 +1,31 @@
 
-let spawner;
+
+
+/**
+ * Welcome to migration station! 𓆩(•࿉•)𓆪
+ * Double-click to change poster. 
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 let spiderA;
 let spiderB;
 let birdUp;
 let birdDown;
+
+let migrationStationPoster;
+let spiderPoster;
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -146,7 +167,7 @@ class Bird extends Scuttler {
 
     this.framesToSteerUp = 0;
 
-    this.size = getRandomInt(15, 40);
+    this.size = getRandomInt(25, 35);
     this.launch();
   }
   launch() {
@@ -200,7 +221,7 @@ class BirdSpawner extends Spawner {
   constructor() {
     super(0.01); //0.1
     this.minY = height * 0.2;
-    this.maxY = height * 0.6;
+    this.maxY = height * 0.4;
     this.spawnCountRange = [1, 2];
 
   }
@@ -238,31 +259,41 @@ class BirdSpawner extends Spawner {
 }
 
 
+let poster;
+let spawner;
 
+let showingSpiders = false;
 
 function preload() {
-  birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_up.png');
-  birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/bird_down.png');
-  spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/spider_a.png');
-  spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/363d72ecde9a7cae330552f1db947c2f3a3921b2/poster/assets/spider_b.png');
+  birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/bird_up.png');
+  birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/bird_down.png');
+  spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_a.png');
+  spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_b.png');
+  migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
+  spiderPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/spiders.png');
 }
 
-function setup() { //3/4
+function setup() {
   createCanvas(600, 800);
   spawner = new BirdSpawner();
-
+  poster = migrationStationPoster;
 }
 
 function draw() {
-  background(220);
+  background(200);
+  poster.resize(600, 800);
+  image(poster, 0, 0);
   spawner.run();
 }
 
+function doubleClicked() {
+  if (showingSpiders) {
+    spawner = new BirdSpawner();
+    poster = migrationStationPoster;
+  } else {
+    spawner = new SpiderSpawner();
+    poster = spiderPoster;
+  }
+  showingSpiders = !showingSpiders;
+}
 
-/**
-
- * Fish: 
- * - have some awareness of each other- cohesion, not overlapping (see example)
- * - start on one side of the screen and move towards the other
- * - dodge the mouse
- */
