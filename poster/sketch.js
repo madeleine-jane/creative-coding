@@ -15,6 +15,8 @@ import './birds.js';
 let migrationStationPoster;
 let spiderPoster;
 let fisheryPoster;
+let baseFish;
+
 
 function mouseInCanvas() {
   return mouseX > 0 && mouseX < width &&
@@ -31,9 +33,14 @@ class Fish extends Scuttler {
     this.height = getRandomInt(40, 60);
     this.width = getRandomInt(20, 40);
   }
+  colorFish() {
+    let fishImg = baseFish.copy(0, 0, baseFish.width, baseFish.height, 0, 0, baseFish.width, baseFish.height);
+    return fishImg;
+  }
   draw() {
     push();
-    rect(this.position.x, this.position.y, this.width, this.height);
+    // rect(this.position.x, this.position.y, this.width, this.height);
+    image(this.colorFish(), this.position.x, this.position.y, this.width, this.height);
     pop();
   }
 
@@ -152,13 +159,14 @@ function preload() {
   fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/fishery.png');
   migrationStationOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station_overlay.png');
   fisheryOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery_overlay.png');
+  baseFish = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/base_fish.png');
 }
 
 function setup() {
   createCanvas(600, 800);
   posters = [
-    new Poster(new BirdSpawner(), migrationStationPoster, migrationStationOverlay),
     new Poster(new FishSpawner(), fisheryPoster, fisheryOverlay),
+    new Poster(new BirdSpawner(), migrationStationPoster, migrationStationOverlay),
     new Poster(new SpiderSpawner(), spiderPoster),
   ];
 }
