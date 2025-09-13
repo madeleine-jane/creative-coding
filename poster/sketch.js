@@ -3,7 +3,7 @@
 
 /**
  * Welcome to migration station! Keep an eye out for birds.
- * Double-click to switch the poster. 
+ * Double-click to switch to the other poster. 
  */
 
 
@@ -106,16 +106,19 @@ class SpiderSpawner extends Spawner {
 class Spider extends Scuttler {
   constructor(x, y) {
     super(x, y);
-    this.maxSpeed = 3;
+    this.maxSpeed = getRandomFloat(3, 5);
     this.maxForce = 0.1;
 
-    this.switchCountdown = 10;
     this.useSpiderA = true;
+
+    this.size = getRandomInt(30, 40);
+    this.resetSwitchCountdown();
   }
 
   resetSwitchCountdown() {
-    this.switchCountdown = 10;
+    this.switchCountdown = 5;
   }
+
   draw() {
     --this.switchCountdown;
     if (this.switchCountdown == 0) {
@@ -124,10 +127,11 @@ class Spider extends Scuttler {
     }
     push();
     translate(this.position.x, this.position.y);
+    imageMode(CENTER);
     if (this.useSpiderA) {
-      image(spiderA, 0, 0, 40, 40);
+      image(spiderA, 0, 0, this.size, this.size);
     } else {
-      image(spiderB, 0, 0, 40, 40);
+      image(spiderB, 0, 0, this.size, this.size);
     }
     pop();
   }
@@ -222,7 +226,7 @@ class Bird extends Scuttler {
 
 class BirdSpawner extends Spawner {
   constructor() {
-    super(0.01); //0.1
+    super(0.01);
     this.minY = height * 0.3;
     this.maxY = height * 0.5;
     this.spawnCountRange = [1, 2];
@@ -238,8 +242,8 @@ class BirdSpawner extends Spawner {
 
   run() {
     //increase odds at the start so the user doesn't have to wait too long for birds
-    if (frameCount < 20) {
-      this.spawnOdds = 0.05;
+    if (frameCount < 10) {
+      this.spawnOdds = 0.1;
     } else {
       this.spawnOdds = 0.01;
     }
@@ -277,8 +281,8 @@ let showingSpiders = false;
 function preload() {
   birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_up.png');
   birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_down.png');
-  spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_a.png');
-  spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_b.png');
+  spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_one.png');
+  spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_two.png');
   migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
   spiderPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/spiders.png');
 }
