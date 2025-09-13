@@ -6,145 +6,79 @@
  * Double-click to switch to the other poster. 
  */
 
+import './boids.js';
+import './base.js';
+import './spiders.js';
+import './birds.js';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-let spiderA;
-let spiderB;
-let birdUp;
-let birdDown;
 
 let migrationStationPoster;
 let spiderPoster;
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
-function getRandomFloat(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-
-class Scuttler {
-  constructor(x, y) {
-    this.position = createVector(x, y);
-    this.target = createVector(200, 200);
-
-    this.velocity = createVector(0, 0);
-    this.acceleration = createVector(0, 0);
-
-  }
-  applyForce(force) {
-    this.acceleration.add(force);
-  }
-}
-
-class Spawner {
-  constructor(spawnOdds) {
-    this.spawnOdds = spawnOdds; //0-1, 0 is never and 1 is always
-    this.scuttlers = [];
-  }
-  shouldSpawn() {
-    return Math.random() < this.spawnOdds;
-  }
-}
-
-
-class SpiderSpawner extends Spawner {
-  constructor() {
-    super(0.1);
-    this.spawnCountRange = [1, 5];
-    this.scuttlers = [];
-  }
-
-  chooseSpawnPoint() {
-    //spawn a bit outside the perimeter
-    switch (getRandomInt(0, 3)) {
-      case 0: //left
-        return createVector(-50, getRandomInt(0, height));
-      case 1: //right
-        return createVector(width + 50, getRandomInt(0, height));
-      case 2: //top
-        return createVector(getRandomInt(0, width), -50);
-      case 3: //bottom
-        return createVector(getRandomInt(0, width), height + 50);
-    }
-  }
-
-  run() {
-    if (this.shouldSpawn()) {
-      const spawnCount = getRandomInt(this.spawnCountRange[0], this.spawnCountRange[1]);
-      for (let i = 0; i < spawnCount; ++i) {
-        let spawnPoint = this.chooseSpawnPoint();
-        this.scuttlers.push(new Spider(spawnPoint.x, spawnPoint.y));
-      }
-    }
-
-    this.scuttlers.map((scuttler) => {
-      scuttler.scuttle();
-    });
-  }
-}
-
-
-//spawns at the perimeter and follows the mouse
-class Spider extends Scuttler {
-  constructor(x, y) {
-    super(x, y);
-    this.maxSpeed = getRandomFloat(3, 5);
+//not what I want but good enough 
+class Fish extends Scuttler {
+  constructor(origin, target) {
+    super(origin.x, origin.y);
+    this.target = target;
+    this.maxSpeed = 3;
     this.maxForce = 0.1;
-
-    this.useSpiderA = true;
-
-    this.size = getRandomInt(30, 40);
-    this.resetSwitchCountdown();
+    this.height = getRandomInt(40, 60);
+    this.width = getRandomInt(20, 40);
   }
-
-  resetSwitchCountdown() {
-    this.switchCountdown = 5;
-  }
-
   draw() {
-    --this.switchCountdown;
-    if (this.switchCountdown == 0) {
-      this.resetSwitchCountdown();
-      this.useSpiderA = !this.useSpiderA;
-    }
     push();
-    translate(this.position.x, this.position.y);
-    imageMode(CENTER);
-    if (this.useSpiderA) {
-      image(spiderA, 0, 0, this.size, this.size);
-    } else {
-      image(spiderB, 0, 0, this.size, this.size);
-    }
+    rect(this.position.x, this.position.y, this.width, this.height);
     pop();
   }
-  scuttle() {
-    this.target = createVector(mouseX, mouseY); //spiders follow the mouse
-    let desired = p5.Vector.sub(this.target, this.position); //make a vector that points from the position to the target
 
+  dodgeMouse() {
+    const mouseDodgeRadius = 100;
+    let dodge;
+    let mousePosition = createVector(mouseX, mouseY);
+    if (p5.Vector.dist(this.position, mousePosition) < mouseDodgeRadius) {
+      if (this.position.x < mouseX) {
+        // go left
+        dodge = createVector(-1, 0);
+      } else {
+        // go right
+        dodge = createVector(1, 0);
+      }
+
+      dodge.mult(this.maxSpeed);
+      return dodge;
+    }
+    return null;
+  }
+
+  scuttle(otherFish) {
+    let desired = p5.Vector.sub(this.target, this.position); //make a vector that points from the position to the target
     desired.setMag(this.maxSpeed);
 
     let steer = p5.Vector.sub(desired, this.velocity); //per Reynolds's steering force formula
     steer.limit(this.maxForce);
 
     this.applyForce(steer);
+
+    let separation = separate(this, otherFish);
+    let alignment = align(this, otherFish);
+    let cohesion = cohere(this, otherFish);
+
+    // Arbitrarily weight these forces
+    separation.mult(5.5);
+    alignment.mult(1.0);
+    cohesion.mult(0.5);
+
+    this.applyForce(separation);
+    this.applyForce(alignment);
+    this.applyForce(cohesion);
+
+    // Dodge the mouse
+    let dodging = this.dodgeMouse(this);
+    if (dodging != null) {
+      dodging.setMag(100);
+      this.applyForce(dodging);
+    }
 
     this.velocity.add(this.acceleration);
     this.velocity.limit(this.maxSpeed);
@@ -154,113 +88,39 @@ class Spider extends Scuttler {
     this.draw();
     this.acceleration.mult(0);
   }
-}
-
-//i have reached a tenuously successful bird simulation
-//i will not touch any more variables
-class Bird extends Scuttler {
-  constructor(origin, target) {
-    super(origin.x, origin.y);
-    this.startingPos = origin;
-    this.target = target;
-    this.gravity = createVector(0, 0.06);
-
-    this.launchVerticality = getRandomInt(100, 400);
-    this.launchSpeed = getRandomFloat(7, 10);
-
-    this.maxSteerUpFrames = 15;
-    this.maxForce = 0.3;
-
-    this.framesToSteerUp = 0;
-
-    this.size = getRandomInt(10, 20);
-    this.launch();
-  }
-  launch() {
-    this.launchVector = p5.Vector.sub(this.target, this.startingPos);
-    this.launchVector.add(createVector(0, -1 * this.launchVerticality));
-    this.launchVector.setMag(this.launchSpeed);
-    this.velocity = this.launchVector;
-  }
-
-
-  draw() {
-    push();
-
-    translate(this.position.x, this.position.y);
-
-    if (this.framesToSteerUp > 0) {
-      angleMode(DEGREES);
-      rotate(-10);
-      image(birdDown, 0, 0, this.size, this.size);
-    } else {
-      image(birdUp, 0, 0, this.size, this.size);
-    }
-    pop();
-  }
-  scuttle() {
-    if (this.position.y > this.startingPos.y && this.framesToSteerUp == 0) {
-      this.framesToSteerUp = this.maxSteerUpFrames;
-    }
-
-    this.applyForce(this.gravity);
-
-    if (this.framesToSteerUp > 0) {
-      --this.framesToSteerUp;
-      let verticalVector = createVector(0, -100 * this.launchVerticality);
-      verticalVector.setMag(this.maxForce);
-      this.applyForce(verticalVector);
-    }
-
-    this.velocity.add(this.acceleration);
-    this.position.add(this.velocity);
-    this.draw();
-
-    this.acceleration.mult(0);
-  }
   alive() {
-    return this.position.x < this.target.x;
+    return this.position.y < this.target.y;
   }
 }
 
-
-class BirdSpawner extends Spawner {
+class FishSpawner extends Spawner {
   constructor() {
-    super(0.01);
-    this.minY = height * 0.3;
-    this.maxY = height * 0.5;
+    super(0.2);
     this.spawnCountRange = [1, 2];
+  }
 
-  }
   chooseOriginAndTarget() {
-    let originY = getRandomInt(this.minY, this.maxY);
-    let targetY = getRandomInt(originY - 200, originY + 400);
-    //start the bird before the canvas so it has some time to get going
-    let originX = getRandomInt(-200, -100);
-    return [createVector(originX, originY), createVector(width, targetY)];
+    let originX = getRandomInt(10, width - 10);
+    return [createVector(originX, -60), createVector(originX, height)];
   }
+
+  reset() { } //override the base reset- do nothing
 
   run() {
-    //increase odds at the start so the user doesn't have to wait too long for birds
-    if (frameCount < 10) {
-      this.spawnOdds = 0.1;
-    } else {
-      this.spawnOdds = 0.01;
-    }
 
     //spawn some new scuttlers
     if (this.shouldSpawn()) {
       const spawnCount = getRandomInt(this.spawnCountRange[0], this.spawnCountRange[1]);
       for (let i = 0; i < spawnCount; ++i) {
         let originAndTarget = this.chooseOriginAndTarget();
-        this.scuttlers.push(new Bird(originAndTarget[0], originAndTarget[1]));
+        this.scuttlers.push(new Fish(originAndTarget[0], originAndTarget[1]));
       }
     }
 
     //advance all scuttlers
     let deadScuttlers = [];
     this.scuttlers.map((scuttler, idx) => {
-      scuttler.scuttle();
+      scuttler.scuttle(this.scuttlers);
       if (!scuttler.alive()) {
         deadScuttlers.push(idx);
       }
@@ -273,10 +133,13 @@ class BirdSpawner extends Spawner {
 }
 
 
-let poster;
+let posterBackground;
 let spawner;
 
-let showingSpiders = false;
+let posterIdx = 0;
+let posterConfigs = [];
+
+
 
 function preload() {
   birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_up.png');
@@ -285,29 +148,45 @@ function preload() {
   spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_two.png');
   migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
   spiderPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/spiders.png');
+
+
 }
 
 function setup() {
   createCanvas(600, 800);
-  spawner = new BirdSpawner();
-  poster = migrationStationPoster;
+  // spawner = new BirdSpawner();
+  posterConfigs = [
+    new Poster(new SpiderSpawner(), spiderPoster),
+    new Poster(new BirdSpawner(), migrationStationPoster)
+  ];
+
+  spawner = new FishSpawner();
+  posterBackground = migrationStationPoster;
 }
 
 function draw() {
   background(200);
-  poster.resize(600, 800);
-  image(poster, 0, 0);
+  // posterBackground.resize(600, 800);
+  // image(posterBackground, 0, 0);
   spawner.run();
 }
 
 function doubleClicked() {
-  if (showingSpiders) {
-    spawner = new BirdSpawner();
-    poster = migrationStationPoster;
-  } else {
-    spawner = new SpiderSpawner();
-    poster = spiderPoster;
+  ++posterIdx;
+  if (posterIdx == posterConfigs.length) {
+    posterIdx = 0;
   }
-  showingSpiders = !showingSpiders;
+
+  posterBackground = posterConfigs[posterIdx].bgImg;
+  spawner = posterConfigs[posterIdx].spawner;
+  spawner.reset();
 }
 
+/**
+ * Visit!
+ * Chromatic Fishery
+ * 
+ * - copy everything from that one p5js example
+ * - fish are moving diagonal from bottom up
+ * - 
+ */
