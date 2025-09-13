@@ -2,8 +2,8 @@
 
 
 /**
- * Welcome to migration station! 𓆩(•࿉•)𓆪
- * Double-click to change poster. 
+ * Welcome to migration station! Keep an eye out for birds.
+ * Double-click to switch the poster. 
  */
 
 
@@ -167,7 +167,7 @@ class Bird extends Scuttler {
 
     this.framesToSteerUp = 0;
 
-    this.size = getRandomInt(25, 35);
+    this.size = getRandomInt(10, 20);
     this.launch();
   }
   launch() {
@@ -221,14 +221,14 @@ class Bird extends Scuttler {
 class BirdSpawner extends Spawner {
   constructor() {
     super(0.01); //0.1
-    this.minY = height * 0.2;
-    this.maxY = height * 0.4;
+    this.minY = height * 0.3;
+    this.maxY = height * 0.5;
     this.spawnCountRange = [1, 2];
 
   }
   chooseOriginAndTarget() {
     let originY = getRandomInt(this.minY, this.maxY);
-    let targetY = getRandomInt(originY - 400, originY + 400);
+    let targetY = getRandomInt(originY - 200, originY + 400);
     //start the bird before the canvas so it has some time to get going
     let originX = getRandomInt(-200, -100);
     return [createVector(originX, originY), createVector(width, targetY)];
@@ -266,8 +266,8 @@ let spawner;
 let showingSpiders = false;
 
 function preload() {
-  birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/bird_up.png');
-  birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/bird_down.png');
+  birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_up.png');
+  birdDown = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_down.png');
   spiderA = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_a.png');
   spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_b.png');
   migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
