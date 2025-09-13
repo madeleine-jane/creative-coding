@@ -15,8 +15,12 @@ import './birds.js';
 let migrationStationPoster;
 let spiderPoster;
 
+function mouseInCanvas() {
+  return mouseX > 0 && mouseX < width &&
+    mouseY > 0 && mouseY < height;
+}
 
-//not what I want but good enough 
+//close enough 
 class Fish extends Scuttler {
   constructor(origin, target) {
     super(origin.x, origin.y);
@@ -36,6 +40,9 @@ class Fish extends Scuttler {
     const mouseDodgeRadius = 100;
     let dodge;
     let mousePosition = createVector(mouseX, mouseY);
+    if (!mouseInCanvas()) {
+      return null;
+    }
     if (p5.Vector.dist(this.position, mousePosition) < mouseDodgeRadius) {
       if (this.position.x < mouseX) {
         // go left
@@ -61,17 +68,13 @@ class Fish extends Scuttler {
     this.applyForce(steer);
 
     let separation = separate(this, otherFish);
-    let alignment = align(this, otherFish);
-    let cohesion = cohere(this, otherFish);
+
 
     // Arbitrarily weight these forces
-    separation.mult(5.5);
-    alignment.mult(1.0);
-    cohesion.mult(0.5);
+    separation.mult(3);
 
     this.applyForce(separation);
-    this.applyForce(alignment);
-    this.applyForce(cohesion);
+
 
     // Dodge the mouse
     let dodging = this.dodgeMouse(this);
@@ -100,8 +103,8 @@ class FishSpawner extends Spawner {
   }
 
   chooseOriginAndTarget() {
-    let originX = getRandomInt(10, width - 10);
-    return [createVector(originX, -60), createVector(originX, height)];
+    let originX = getRandomInt(0, width);
+    return [createVector(originX, -100), createVector(originX, height)];
   }
 
   reset() { } //override the base reset- do nothing

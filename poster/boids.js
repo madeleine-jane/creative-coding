@@ -19,7 +19,7 @@ function seek(currentBoid, target) {
 }
 
 function separate(currentBoid, boids) {
-    let desiredSeparation = 30.0;
+    let desiredSeparation = 50.0;
     let steer = createVector(0, 0);
     let count = 0;
 
