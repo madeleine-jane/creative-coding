@@ -19,6 +19,8 @@
 
 
 
+
+
 let spiderA;
 let spiderB;
 let birdUp;
@@ -235,6 +237,13 @@ class BirdSpawner extends Spawner {
   }
 
   run() {
+    //increase odds at the start so the user doesn't have to wait too long for birds
+    if (frameCount < 20) {
+      this.spawnOdds = 0.05;
+    } else {
+      this.spawnOdds = 0.01;
+    }
+
     //spawn some new scuttlers
     if (this.shouldSpawn()) {
       const spawnCount = getRandomInt(this.spawnCountRange[0], this.spawnCountRange[1]);
