@@ -67,13 +67,13 @@ class SpiderSpawner extends Spawner {
         //spawn a bit outside the perimeter
         switch (getRandomInt(0, 3)) {
             case 0: //left
-                return createVector(-50, getRandomInt(0, height));
+                return createVector(-30, getRandomInt(0, height));
             case 1: //right
-                return createVector(width + 50, getRandomInt(0, height));
+                return createVector(width + 30, getRandomInt(0, height));
             case 2: //top
-                return createVector(getRandomInt(0, width), -50);
+                return createVector(getRandomInt(0, width), -30);
             case 3: //bottom
-                return createVector(getRandomInt(0, width), height + 50);
+                return createVector(getRandomInt(0, width), height + 30);
         }
     }
 

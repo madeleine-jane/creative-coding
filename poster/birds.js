@@ -76,7 +76,14 @@ class BirdSpawner extends Spawner {
         this.minY = height * 0.3;
         this.maxY = height * 0.5;
         this.spawnCountRange = [1, 2];
-
+        this.resetHighOddsFrameCountdown();
+    }
+    reset() {
+        this.scuttlers = [];
+        this.resetHighOddsFrameCountdown();
+    }
+    resetHighOddsFrameCountdown() {
+        this.highOddsFrameCountdown = 10;
     }
     chooseOriginAndTarget() {
         let originY = getRandomInt(this.minY, this.maxY);
@@ -88,8 +95,9 @@ class BirdSpawner extends Spawner {
 
     run() {
         //increase odds at the start so the user doesn't have to wait too long for birds
-        if (frameCount < 10) {
-            this.spawnOdds = 0.1;
+        if (this.highOddsFrameCountdown > 0) {
+            --this.highOddsFrameCountdown;
+            this.spawnOdds = 0.2;
         } else {
             this.spawnOdds = 0.01;
         }
