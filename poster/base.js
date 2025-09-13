@@ -10,9 +10,10 @@ function getRandomFloat(min, max) {
 }
 
 class Poster {
-    constructor(spawner, bgImg) {
+    constructor(spawner, bgImg, overlay) {
         this.bgImg = bgImg;
         this.spawner = spawner;
+        this.overlay = overlay;
     }
 }
 

@@ -3,7 +3,7 @@
 
 /**
  * Welcome to migration station! Keep an eye out for birds.
- * Double-click to switch to the other poster. 
+ * Double-click to look through the other posters. 
  */
 
 import './boids.js';
@@ -14,6 +14,7 @@ import './birds.js';
 
 let migrationStationPoster;
 let spiderPoster;
+let fisheryPoster;
 
 function mouseInCanvas() {
   return mouseX > 0 && mouseX < width &&
@@ -107,8 +108,6 @@ class FishSpawner extends Spawner {
     return [createVector(originX, -100), createVector(originX, height)];
   }
 
-  reset() { } //override the base reset- do nothing
-
   run() {
 
     //spawn some new scuttlers
@@ -136,13 +135,11 @@ class FishSpawner extends Spawner {
 }
 
 
-let posterBackground;
-let spawner;
-
 let posterIdx = 0;
-let posterConfigs = [];
+let posters = [];
 
-
+let migrationStationOverlay;
+let fisheryOverlay;
 
 function preload() {
   birdUp = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/b_up.png');
@@ -151,45 +148,33 @@ function preload() {
   spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_two.png');
   migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
   spiderPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/spiders.png');
-
-
+  fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/fishery.png');
+  migrationStationOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station_overlay.png');
+  fisheryOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery_overlay.png');
 }
 
 function setup() {
   createCanvas(600, 800);
-  // spawner = new BirdSpawner();
-  posterConfigs = [
+  posters = [
+    new Poster(new BirdSpawner(), migrationStationPoster, migrationStationOverlay),
+    new Poster(new FishSpawner(), fisheryPoster, fisheryOverlay),
     new Poster(new SpiderSpawner(), spiderPoster),
-    new Poster(new BirdSpawner(), migrationStationPoster)
   ];
-
-  spawner = new FishSpawner();
-  posterBackground = migrationStationPoster;
 }
 
 function draw() {
   background(200);
-  // posterBackground.resize(600, 800);
-  // image(posterBackground, 0, 0);
-  spawner.run();
+  let poster = posters[posterIdx];
+  poster.bgImg.resize(600, 800);
+  image(poster.bgImg, 0, 0);
+  poster.spawner.run();
 }
 
 function doubleClicked() {
   ++posterIdx;
-  if (posterIdx == posterConfigs.length) {
+  if (posterIdx == posters.length) {
     posterIdx = 0;
   }
-
-  posterBackground = posterConfigs[posterIdx].bgImg;
-  spawner = posterConfigs[posterIdx].spawner;
-  spawner.reset();
+  posters[posterIdx].spawner.reset();
 }
 
-/**
- * Visit!
- * Chromatic Fishery
- * 
- * - copy everything from that one p5js example
- * - fish are moving diagonal from bottom up
- * - 
- */
