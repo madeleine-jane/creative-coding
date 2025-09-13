@@ -108,6 +108,7 @@ class FishSpawner extends Spawner {
     return [createVector(originX, -100), createVector(originX, height)];
   }
 
+  reset() { }
   run() {
 
     //spawn some new scuttlers
@@ -162,16 +163,22 @@ function setup() {
   ];
 }
 
+
 function draw() {
   background(200);
   let poster = posters[posterIdx];
   poster.bgImg.resize(600, 800);
   image(poster.bgImg, 0, 0);
   poster.spawner.run();
+  if (poster.overlay) {
+    poster.overlay.resize(600, 800);
+    image(poster.overlay, 0, 0);
+  }
 }
 
 function doubleClicked() {
   ++posterIdx;
+  console.log('hi');
   if (posterIdx == posters.length) {
     posterIdx = 0;
   }
