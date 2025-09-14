@@ -44,7 +44,7 @@ class Fish extends Scuttler {
   constructor(origin, target) {
     super(origin.x, origin.y);
     this.target = target;
-    this.maxSpeed = 3.5;
+    this.maxSpeed = 3;
     this.maxForce = 0.1;
     this.height = getRandomInt(40, 120);
     this.width = getRandomInt(this.height - 20, this.height + 5);
