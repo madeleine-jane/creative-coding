@@ -7,7 +7,6 @@ iridescent_colors = [
     "#5177e0",
     "#aa71eb",
     "#fa4ada",
-    "#d86275",
     "#aaddc3",
     "#efc0be",
     "#6feee9",
@@ -54,7 +53,7 @@ def colorLines(lineColorHex):
                 continue
             if (pixels[i, j])[0] == 0:
                 color_rgb = ImageColor.getrgb(lineColorHex)
-                pixels[i, j] = (addColorModifier(color_rgb[0]), addColorModifier(color_rgb[1]), addColorModifier(color_rgb[2]))
+                pixels[i, j] = color_rgb
             else:
                 pixels[i, j] = (0, 0, 0, 0)
     return img
@@ -73,9 +72,9 @@ def colorBase(baseColorHex):
 def main():
     print("Hello from fish-zone!") 
     for i in range(len(iridescent_colors)):
-        # fish_base = colorBase(iridescent_colors[i])
-        # fish_base = fish_base.rotate(90, expand=True)
-        # fish_base.save(f'bases/fish_{i}.png')
+        fish_base = colorBase(iridescent_colors[i])
+        fish_base = fish_base.rotate(90, expand=True)
+        fish_base.save(f'bases/fish_{i}.png')
         fish_lines = colorLines(iridescent_colors[i])
         fish_lines = fish_lines.rotate(90, expand=True)
         fish_lines.save(f'lines/fish_{i}.png')

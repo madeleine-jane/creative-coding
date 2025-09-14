@@ -26,7 +26,7 @@ function mouseInCanvas() {
 let fishLines = [];
 let fishBases = [];
 
-const numColors = 15;
+const numColors = 14;
 
 function loadFishImages() {
   for (let i = 0; i < numColors; ++i) {
@@ -116,7 +116,7 @@ class Fish extends Scuttler {
     let dodging = this.dodgeMouse(this);
     if (dodging != null) {
       dodging.setMag(100);
-      this.applyForce(dodging);
+      // this.applyForce(dodging);
     }
 
     this.velocity.add(this.acceleration);
@@ -128,14 +128,14 @@ class Fish extends Scuttler {
     this.acceleration.mult(0);
   }
   alive() {
-    return this.position.y < (this.target.y + 10);
+    return this.position.y < (this.target.y + this.height);
   }
 }
 
 class FishSpawner extends Spawner {
   constructor() {
     super(0.1);
-    this.spawnCountRange = [1, 2];
+    this.spawnCountRange = [2, 4];
   }
 
 
