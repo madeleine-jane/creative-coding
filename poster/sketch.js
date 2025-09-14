@@ -23,24 +23,76 @@ function mouseInCanvas() {
     mouseY > 0 && mouseY < height;
 }
 
-//close enough 
+const coloredFishes = [];
+
+function saveFish(img, name) {
+  let gfx = createGraphics(img.width, img.height);
+  gfx.image(img, 0, 0);
+  gfx.save(name);  // works reliably
+}
+
+function generateFishImages() {
+  const holographicColors = [
+    color("#3646ac"),
+    color("#5177e0"),
+    color("#aa71eb"),
+    color("#fa4ada"),
+    color("#d86275"),
+    color("#aaddc3"),
+    color("#efc0be"),
+    color("#f1bed2"),
+    color("#6feee9"),
+    color("#a5e8d2"),
+    color("#57b7ef"),
+    color("#a851ee"),
+    color("#e4f34e"),
+    color("#7ee65c"),
+    color("#41b8f0"),
+  ];
+
+  const lineDarkness = 90;
+
+  for (let i = 0; i < holographicColors.length; ++i) {
+    let baseFill = holographicColors[i];
+
+    let lineFill = holographicColors[getRandomInt(0, holographicColors.length)];
+
+    let fishImg = baseFish.get();
+    fishImg.loadPixels(); // prepare pixels
+    for (let i = 0; i < fishImg.pixels.length; i += 4) {
+      let pixelFill = baseFill;
+      if (fishImg.pixels[i] < 100) {
+        // pixelFill = color(red(baseFill) - lineDarkness, green(baseFill) - lineDarkness, blue(baseFill) - lineDarkness);
+        pixelFill = lineFill;
+      }
+      fishImg.pixels[i] = red(pixelFill);     // R
+      fishImg.pixels[i + 1] = green(pixelFill); // G
+      fishImg.pixels[i + 2] = blue(pixelFill);  // B
+    }
+    fishImg.updatePixels(); // push changes back
+    coloredFishes.push(fishImg);
+  }
+  // coloredFishes[0].save('test_fish.png');
+  saveFish(coloredFishes[0], 'testttt.png');
+}
+
+
 class Fish extends Scuttler {
   constructor(origin, target) {
     super(origin.x, origin.y);
     this.target = target;
     this.maxSpeed = 3;
     this.maxForce = 0.1;
-    this.height = getRandomInt(40, 60);
-    this.width = getRandomInt(20, 40);
+    this.height = getRandomInt(60, 100);
+    this.width = getRandomInt(40, 60);
+    this.fishImg = coloredFishes[getRandomInt(0, coloredFishes.length - 1)];
   }
-  colorFish() {
-    let fishImg = baseFish.copy(0, 0, baseFish.width, baseFish.height, 0, 0, baseFish.width, baseFish.height);
-    return fishImg;
-  }
+
   draw() {
     push();
-    // rect(this.position.x, this.position.y, this.width, this.height);
-    image(this.colorFish(), this.position.x, this.position.y, this.width, this.height);
+    translate(this.position.x, this.position.y);
+    imageMode(CENTER);
+    image(baseFish, 0, 0, this.width, this.height);
     pop();
   }
 
@@ -106,9 +158,10 @@ class Fish extends Scuttler {
 
 class FishSpawner extends Spawner {
   constructor() {
-    super(0.2);
+    super(0.1);
     this.spawnCountRange = [1, 2];
   }
+
 
   chooseOriginAndTarget() {
     let originX = getRandomInt(0, width);
@@ -159,10 +212,14 @@ function preload() {
   fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/fishery.png');
   migrationStationOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station_overlay.png');
   fisheryOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery_overlay.png');
-  baseFish = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/base_fish.png');
+  baseFish = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/down_fish.png');
+
+  generateFishImages();
 }
 
+
 function setup() {
+  console.log('reloaded');
   createCanvas(600, 800);
   posters = [
     new Poster(new FishSpawner(), fisheryPoster, fisheryOverlay),
@@ -174,19 +231,19 @@ function setup() {
 
 function draw() {
   background(200);
-  let poster = posters[posterIdx];
-  poster.bgImg.resize(600, 800);
-  image(poster.bgImg, 0, 0);
-  poster.spawner.run();
-  if (poster.overlay) {
-    poster.overlay.resize(600, 800);
-    image(poster.overlay, 0, 0);
-  }
+  generateFishImages();
+  // let poster = posters[posterIdx];
+  // poster.bgImg.resize(600, 800);
+  // image(poster.bgImg, 0, 0);
+  // poster.spawner.run();
+  // if (poster.overlay) {
+  //   poster.overlay.resize(600, 800);
+  //   image(poster.overlay, 0, 0);
+  // }
 }
 
 function doubleClicked() {
   ++posterIdx;
-  console.log('hi');
   if (posterIdx == posters.length) {
     posterIdx = 0;
   }
