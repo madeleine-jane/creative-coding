@@ -44,7 +44,7 @@ class Fish extends Scuttler {
   constructor(origin, target) {
     super(origin.x, origin.y);
     this.target = target;
-    this.maxSpeed = 3;
+    this.maxSpeed = 3.5;
     this.maxForce = 0.1;
     this.height = getRandomInt(40, 120);
     this.width = getRandomInt(this.height - 20, this.height + 5);
@@ -72,27 +72,7 @@ class Fish extends Scuttler {
     pop();
   }
 
-  dodgeMouse() {
-    const mouseDodgeRadius = 100;
-    let dodge;
-    let mousePosition = createVector(mouseX, mouseY);
-    if (!mouseInCanvas()) {
-      return null;
-    }
-    if (p5.Vector.dist(this.position, mousePosition) < mouseDodgeRadius) {
-      if (this.position.x < mouseX) {
-        // go left
-        dodge = createVector(-1, 0);
-      } else {
-        // go right
-        dodge = createVector(1, 0);
-      }
 
-      dodge.mult(this.maxSpeed);
-      return dodge;
-    }
-    return null;
-  }
 
   scuttle(otherFish) {
     let desired = p5.Vector.sub(this.target, this.position); //make a vector that points from the position to the target
@@ -104,20 +84,9 @@ class Fish extends Scuttler {
     this.applyForce(steer);
 
     let separation = separate(this, otherFish);
-
-
-    // Arbitrarily weight these forces
     separation.mult(3);
 
     this.applyForce(separation);
-
-
-    // Dodge the mouse
-    let dodging = this.dodgeMouse(this);
-    if (dodging != null) {
-      dodging.setMag(100);
-      this.applyForce(dodging);
-    }
 
     this.velocity.add(this.acceleration);
     this.velocity.limit(this.maxSpeed);
@@ -134,7 +103,7 @@ class Fish extends Scuttler {
 
 class FishSpawner extends Spawner {
   constructor() {
-    super(0.1);
+    super(0.12);
     this.spawnCountRange = [2, 4];
   }
 
@@ -185,7 +154,7 @@ function preload() {
   spiderB = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/spider_two.png');
   migrationStationPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station.png');
   spiderPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/spiders_v2.png');
-  fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/fishery.png');
+  fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery.png');
   migrationStationOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station_overlay.png');
   fisheryOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery_overlay.png');
 
@@ -194,18 +163,16 @@ function preload() {
 
 
 function setup() {
-  console.log('reloaded');
   createCanvas(600, 800);
   posters = [
-    new Poster(new FishSpawner(), fisheryPoster, fisheryOverlay),
     new Poster(new BirdSpawner(), migrationStationPoster, migrationStationOverlay),
+    new Poster(new FishSpawner(), fisheryPoster, fisheryOverlay),
     new Poster(new SpiderSpawner(), spiderPoster),
   ];
 }
 
 
 function draw() {
-  background(200);
   let poster = posters[posterIdx];
   poster.bgImg.resize(600, 800);
   image(poster.bgImg, 0, 0);
