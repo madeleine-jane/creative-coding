@@ -23,57 +23,20 @@ function mouseInCanvas() {
     mouseY > 0 && mouseY < height;
 }
 
-const coloredFishes = [];
+let fishLines = [];
+let fishBases = [];
 
-function saveFish(img, name) {
-  let gfx = createGraphics(img.width, img.height);
-  gfx.image(img, 0, 0);
-  gfx.save(name);  // works reliably
-}
+const numColors = 15;
 
-function generateFishImages() {
-  const holographicColors = [
-    color("#3646ac"),
-    color("#5177e0"),
-    color("#aa71eb"),
-    color("#fa4ada"),
-    color("#d86275"),
-    color("#aaddc3"),
-    color("#efc0be"),
-    color("#f1bed2"),
-    color("#6feee9"),
-    color("#a5e8d2"),
-    color("#57b7ef"),
-    color("#a851ee"),
-    color("#e4f34e"),
-    color("#7ee65c"),
-    color("#41b8f0"),
-  ];
+function loadFishImages() {
+  for (let i = 0; i < numColors; ++i) {
+    let base = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/fish/bases/fish_' + i + '.png');
+    let line = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/fish/lines/fish_' + i + '.png');
 
-  const lineDarkness = 90;
-
-  for (let i = 0; i < holographicColors.length; ++i) {
-    let baseFill = holographicColors[i];
-
-    let lineFill = holographicColors[getRandomInt(0, holographicColors.length)];
-
-    let fishImg = baseFish.get();
-    fishImg.loadPixels(); // prepare pixels
-    for (let i = 0; i < fishImg.pixels.length; i += 4) {
-      let pixelFill = baseFill;
-      if (fishImg.pixels[i] < 100) {
-        // pixelFill = color(red(baseFill) - lineDarkness, green(baseFill) - lineDarkness, blue(baseFill) - lineDarkness);
-        pixelFill = lineFill;
-      }
-      fishImg.pixels[i] = red(pixelFill);     // R
-      fishImg.pixels[i + 1] = green(pixelFill); // G
-      fishImg.pixels[i + 2] = blue(pixelFill);  // B
-    }
-    fishImg.updatePixels(); // push changes back
-    coloredFishes.push(fishImg);
+    fishBases.push(base);
+    fishLines.push(line);
   }
-  // coloredFishes[0].save('test_fish.png');
-  saveFish(coloredFishes[0], 'testttt.png');
+  console.log('loading complete!');
 }
 
 
@@ -83,16 +46,29 @@ class Fish extends Scuttler {
     this.target = target;
     this.maxSpeed = 3;
     this.maxForce = 0.1;
-    this.height = getRandomInt(60, 100);
-    this.width = getRandomInt(40, 60);
-    this.fishImg = coloredFishes[getRandomInt(0, coloredFishes.length - 1)];
+    this.height = getRandomInt(40, 120);
+    this.width = getRandomInt(this.height - 20, this.height + 5);
+    this.setColors();
+  }
+  setColors() {
+    let baseColorIdx = getRandomInt(0, fishBases.length - 1);
+    let lineColorIdx = getRandomInt(0, fishLines.length - 1);
+    if (baseColorIdx == lineColorIdx) {
+      ++lineColorIdx;
+    }
+    if (lineColorIdx == fishLines.length) {
+      lineColorIdx = 0;
+    }
+    this.baseImg = fishBases[baseColorIdx];
+    this.lineImg = fishLines[lineColorIdx];
   }
 
   draw() {
     push();
     translate(this.position.x, this.position.y);
     imageMode(CENTER);
-    image(baseFish, 0, 0, this.width, this.height);
+    image(this.baseImg, 0, 0, this.width, this.height);
+    image(this.lineImg, 0, 0, this.width, this.height);
     pop();
   }
 
@@ -152,7 +128,7 @@ class Fish extends Scuttler {
     this.acceleration.mult(0);
   }
   alive() {
-    return this.position.y < this.target.y;
+    return this.position.y < (this.target.y + 10);
   }
 }
 
@@ -212,9 +188,8 @@ function preload() {
   fisheryPoster = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/fishery.png');
   migrationStationOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/migration_station_overlay.png');
   fisheryOverlay = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/poster_backgrounds/chromatic_fishery_overlay.png');
-  baseFish = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/poster/assets/down_fish.png');
 
-  generateFishImages();
+  loadFishImages();
 }
 
 
@@ -231,15 +206,14 @@ function setup() {
 
 function draw() {
   background(200);
-  generateFishImages();
-  // let poster = posters[posterIdx];
-  // poster.bgImg.resize(600, 800);
-  // image(poster.bgImg, 0, 0);
-  // poster.spawner.run();
-  // if (poster.overlay) {
-  //   poster.overlay.resize(600, 800);
-  //   image(poster.overlay, 0, 0);
-  // }
+  let poster = posters[posterIdx];
+  poster.bgImg.resize(600, 800);
+  image(poster.bgImg, 0, 0);
+  poster.spawner.run();
+  if (poster.overlay) {
+    poster.overlay.resize(600, 800);
+    image(poster.overlay, 0, 0);
+  }
 }
 
 function doubleClicked() {

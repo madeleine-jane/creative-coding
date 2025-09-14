@@ -72,7 +72,7 @@ class Bird extends Scuttler {
 
 class BirdSpawner extends Spawner {
     constructor() {
-        super(0.01);
+        super(0.02);
         this.minY = height * 0.3;
         this.maxY = height * 0.5;
         this.spawnCountRange = [1, 2];
@@ -99,7 +99,7 @@ class BirdSpawner extends Spawner {
             --this.highOddsFrameCountdown;
             this.spawnOdds = 0.2;
         } else {
-            this.spawnOdds = 0.01;
+            this.spawnOdds = 0.02;
         }
 
         //spawn some new scuttlers
