@@ -17,7 +17,6 @@ class Poster {
     }
 }
 
-
 class Scuttler {
     constructor(x, y) {
         this.position = createVector(x, y);

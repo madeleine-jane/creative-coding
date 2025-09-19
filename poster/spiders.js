@@ -1,6 +1,7 @@
 
-let spiderA;
-let spiderB;
+let spiderImageA;
+let spiderImageB;
+
 //spawns at the perimeter and follows the mouse
 class Spider extends Scuttler {
     constructor(x, y) {
@@ -28,9 +29,9 @@ class Spider extends Scuttler {
         translate(this.position.x, this.position.y);
         imageMode(CENTER);
         if (this.useSpiderA) {
-            image(spiderA, 0, 0, this.size, this.size);
+            image(spiderImageA, 0, 0, this.size, this.size);
         } else {
-            image(spiderB, 0, 0, this.size, this.size);
+            image(spiderImageB, 0, 0, this.size, this.size);
         }
         pop();
     }
@@ -83,6 +84,9 @@ class SpiderSpawner extends Spawner {
             for (let i = 0; i < spawnCount; ++i) {
                 let spawnPoint = this.chooseSpawnPoint();
                 this.scuttlers.push(new Spider(spawnPoint.x, spawnPoint.y));
+                if (this.scuttlers.length > 200) {
+                    this.scuttlers.splice(0, spawnCount);
+                }
             }
         }
 
