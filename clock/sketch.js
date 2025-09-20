@@ -1,29 +1,86 @@
-
 const startedAt = Date.now();
 const lerpSecs = 10;
 
-const lerpCompleteAt = startedAt + (lerpSecs * 1000);
+const lerpCompleteAt = startedAt + lerpSecs * 1000;
 
-const startingBottomColor = color('red');
-const startingTopColor = color('blue');
-const targetBottomColor = color('purple');
-const targetTopColor = color('yellow');
-
-let currentBottomColor = startingBottomColor;
-let currentTopColor = startingTopColor;
 
 let mountainImg;
+let mountainPg;
+
+let mountainSizeMult;
+let mountainImgWidth;
+let mountainDrawnSize;
+
+let mountainImgPixelGrid;
+
+function pixelIdxToCoordinates(pixelIdx, imageWidth) {
+  // Convert raw pixels[] index into pixel number
+  const pixelNumber = Math.floor(pixelIdx / 4);
+  const x = pixelNumber % imageWidth;
+  const y = Math.floor(pixelNumber / imageWidth);
+  return [x, y];
+}
+
+function coordinatesToPixelIdx(x, y, imageWidth) {
+  // Convert pixel coordinates back into raw pixels[] index
+  return (y * imageWidth + x) * 4;
+}
+
+function loadMountain(pg, mountainImg) {
+  //initialize output grid so i can just index into it
+  mountainImg.loadPixels();
+  for (let i = 0; i < mountainImg.pixels.length; i += 4) {
+    //isolate the color of the pixel
+    let pixelColor = color(
+      mountainImg.pixels[i],
+      mountainImg.pixels[i + 1],
+      mountainImg.pixels[i + 2],
+      mountainImg.pixels[i + 3]
+    );
+    //then insert it into a 2d array
+    let [pixelX, pixelY] = pixelIdxToCoordinates(i, mountainImgWidth);
+    mountainImgPixelGrid[pixelX][pixelY] = pixelColor;
+  }
+}
+
+function drawMountain(pg) {
+  for (let i = 0; i < mountainImgPixelGrid.length; ++i) {
+    for (let j = 0; j < mountainImgPixelGrid[i].length; ++j) {
+      pg.fill(mountainImgPixelGrid[i][j]); // actually use the pixel’s color
+      pg.noStroke();
+      pg.square(i * mountainSizeMult, j * mountainSizeMult, mountainSizeMult);
+    }
+  }
+}
+
+function preload() {
+  mountainSizeMult = 10;
+  mountainImgWidth = 64;
+  mountainDrawnSize = mountainImgWidth * mountainSizeMult;
+
+  mountainImgPixelGrid = new Array(mountainImgWidth)
+    .fill(null)
+    .map(() => new Array(mountainImgWidth).fill(color(0)));
+
+  mountainImg = loadImage(
+    "https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/clock/assets/mountain.png"
+  );
+  mountainPg = createGraphics(mountainDrawnSize, mountainDrawnSize);
+}
 
 function setup() {
-  createCanvas(600, 800);
-  mountainImg = loadImage('asset/mountain.png');
+  frameRate(3);
+  loadMountain(mountainPg, mountainImg);
+  createCanvas(mountainDrawnSize, mountainDrawnSize * (4 / 3));
+
 }
 
 function draw() {
   background(220);
-  image(mountainImg, 0, 0);
-  // incrementColors();
-  // setGradient(currentTopColor, currentBottomColor);
+  mountainPg.background(color('green));
+  drawMountain(mountainPg);
+  // mountainPg.image(mountainImg, 0, 0);
+  image(mountainPg, 0, height - mountainDrawnSize);
 }
 
 function incrementColors() {
@@ -42,8 +99,4 @@ function setGradient(c1, c2) {
     stroke(c);
     line(0, y, width, y);
   }
-}
-
-function mouseClicked() {
-  console.log(get(mouseX, mouseY));
 }
