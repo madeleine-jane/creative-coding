@@ -1,41 +1,102 @@
-let img;
-let scrollX = 0;
 
-function preload() {
-  img = loadImage('https://raw.githubusercontent.com/cacheflowe/haxademic/master/data/haxademic/images/no-signal.png');
+var radius = 120;
+var sphereDetail = 0.3;
+
+let sphereBase;
+let sphereCoordsWidth;
+let sphereCoordsHeight;
+
+let sphereCenter;
+let maxMotionSpeed = 1;
+
+let dragonFruitSphere;
+
+function sphereVec(lat, lon) {
+  var x = radius * sin(lat) * cos(lon);
+  var y = radius * sin(lat) * sin(lon);
+  var z = radius * cos(lat);
+  return createVector(x, y, z);
 }
+
+
+function loadSphere() {
+  let newSphere = new Array(sphereCoordsHeight)
+    .fill(null)
+    .map(() => new Array(sphereCoordsWidth).fill(createVector(0, 0, 0)));
+  for (let i = 0; i < newSphere.length; ++i) {
+    for (let j = 0; j < newSphere[i].length; ++j) {
+      let lat = i * sphereDetail;
+      let lon = j * sphereDetail;
+      let pointCoords = sphereVec(lat, lon);
+      newSphere[i][j] = pointCoords;
+    }
+  }
+  return newSphere;
+
+}
+
+
+function drawVertices(sphere, i, j) {
+  let v = sphere[i][j];
+  vertex(v.x, v.y, v.z);
+
+  if (i + 1 <= sphere.length - 1) {
+    let v2 = sphere[i + 1][j];
+    vertex(v2.x, v2.y, v2.z);
+  }
+}
+
+function createDragonFruit(sphere) {
+  //first load it into a new copy
+
+  for (let i = 0; i < sphere.length; ++i) {
+    for (let j = 0; j < sphere[i].length; ++j) {
+      //move this point away from origin
+      let vecFromCenter = p5.Vector.sub(sphere[i][j], sphereCenter); //make a vector that points from the position to the target
+      vecFromCenter.setMag(500);
+
+      let v = sphere[i][j].copy();
+      v.add(vecFromCenter);
+
+      sphere[i][j] = v;
+      sphere[i][j] = createVector(0, 0, 0);
+    }
+  }
+  return sphere;
+}
+
+
+function drawSphere(sphere) {
+  for (let i = 0; i < sphere.length; ++i) {
+    beginShape(TRIANGLE_STRIP);
+    for (let j = 0; j < sphere[i].length; ++j) {
+      //make two vertices: one at i, one at i+1
+      drawVertices(sphere, i, j);
+    }
+    drawVertices(sphere, i, 0);
+    endShape();
+  }
+}
+
 
 function setup() {
-  let gl = this._renderer.GL;
+  createCanvas(300, 300, WEBGL);
+  sphereCoordsWidth = Math.ceil(TWO_PI / sphereDetail);
+  sphereCoordsHeight = Math.ceil(PI / sphereDetail);
+  sphereCenter = createVector(0, 0, 0, 0);
 
-  // Get version info
-  console.log("WebGL version:", gl.getParameter(gl.VERSION));
-  console.log("GLSL version:", gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-  console.log("Renderer:", gl.getParameter(gl.RENDERER));
-  console.log("Vendor:", gl.getParameter(gl.VENDOR));
-  createCanvas(400, 350, WEBGL);
+  sphereBase = loadSphere();
+  dragonFruitSphere = createDragonFruit(loadSphere());
+  console.log(dragonFruitSphere[3]);
 }
 
+
 function draw() {
-  // clear background and set context 
-  // back to top-left b/c of WEBGL mode
-  background(220);
-  noStroke();
-  translate(-width / 2, -height / 2);
+  background(255);
 
-  // draw as a texture on a quad, clockwise
-  // from top-left. Last 2 arguments are
-  // UV coordinates after x/y/z
-  scrollX += (width / 2 - mouseX) * 0.0004;
-  let tile = map(mouseY, 0, height, 1, 4);
-  texture(img);
-  textureMode(NORMAL); // normalized UV coordinates, rather than pixel dimensions
-  textureWrap(REPEAT); // repeating texture for scrolling/tiling
-  beginShape();
-  vertex(100, 100, 0, 0 + scrollX, 0);
-  vertex(300, 100, 0, tile + scrollX, 0);
-  vertex(300, 240, 0, tile + scrollX, tile);
-  vertex(100, 240, 0, 0 + scrollX, tile);
-  endShape();
-
+  orbitControl();
+  fill(255, 0, 0);
+  // mutateSphere();
+  drawSphere(dragonFruitSphere);
+  // debugMode();
 }
