@@ -641,15 +641,9 @@
   },
   "SV": {
     "lineCode": "SV",
-    "startStationCode": "N06",
+    "startStationCode": "N02",
     "endStationCode": "G05",
     "stations": [
-      {
-        "code": "N12",
-        "name": "Ashburn",
-        "lat": 39.005283,
-        "lon": -77.491537
-      },
       {
         "code": "N02",
         "name": "Tysons",
