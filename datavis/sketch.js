@@ -1,4 +1,6 @@
 
+/* jshint esversion: 9 */
+
 let api_key = 'b520f5854fb5428d8a4b32f10dcc9528'; //TODO: put this somewhere more secure
 let lines = {};
 let dataLoaded = false;
@@ -24,126 +26,95 @@ function lineColor(lineCode) {
   return colors[lineCode] || color(0); // Default to black if line code not found
 }
 
-function getLines() {
-  return new Promise((resolve, reject) => {
-    let url = 'http://api.wmata.com/Rail.svc/json/jLines?api_key=' + api_key;
-    loadJSON(url,
-      function (data) {
-        let lineCodes = data.Lines.map(line => ({
-          lineCode: line.LineCode,
-          startStationCode: line.StartStationCode,
-          endStationCode: line.EndStationCode
-        }));
-        resolve(lineCodes);
-      },
-      function (error) {
-        reject(error);
-      }
-    );
-  });
-}
-
-function getStations(lineCode) {
-  return new Promise((resolve, reject) => {
-    let url = 'http://api.wmata.com/Rail.svc/json/jStations?LineCode=' + lineCode + '&api_key=' + api_key;
-    loadJSON(url,
-      function (data) {
-        let stations = data.Stations.map(station => ({
-          code: station.Code,
-          name: station.Name,
-          lat: station.Lat,
-          lon: station.Lon
-        }));
-        resolve(stations);
-      },
-      function (error) {
-        reject(error);
-      }
-    );
-  });
-}
-
-function getStationSequence(lineCode, startStationCode, endStationCode) {
-  return new Promise((resolve, reject) => {
-    let url = 'http://api.wmata.com/Rail.svc/json/jPath?FromStationCode=' + startStationCode + '&ToStationCode=' + endStationCode + '&api_key=' + api_key;
-    loadJSON(url,
-      function (data) {
-        let stationSequence = data.Path.map(station => ({
-          code: station.StationCode,
-          sequenceNum: station.SeqNum
-        }));
-        resolve(stationSequence);
-      },
-      function (error) {
-        reject(error);
-      }
-    );
-  });
-}
-
-
-async function processLine(lineResult) {
-  try {
-    // Get stations for this line
-    const stationResults = await getStations(lineResult.lineCode);
-
-    // Get station sequence
-    const stationSequence = await getStationSequence(
-      lineResult.lineCode,
-      lineResult.startStationCode,
-      lineResult.endStationCode
-    );
-
-    // Sort stations based on sequence number
-    stationSequence.sort((a, b) => a.sequenceNum - b.sequenceNum);
-
-    // Map sorted station codes to full station details
-    const orderedStations = stationSequence.map(seq =>
-      stationResults.find(station => station.code === seq.code)
-    );
-
-    // Store the complete line data
-    lines[lineResult.lineCode] = {
-      ...lineResult,
-      stations: orderedStations
-    };
-
-  } catch (error) {
-    console.error(`Error processing line ${lineResult.lineCode}:`, error);
-  }
-}
-
-async function loadAllData() {
-  try {
-    const lineResults = await getLines();
-
-    // Process all lines in parallel
-    await Promise.all(lineResults.map(lineResult => processLine(lineResult)));
-
-    // Mark data as loaded
-    dataLoaded = true;
-    console.log('All data loaded successfully!');
-  } catch (error) {
-    console.error('Error loading data:', error);
-  }
+function loadLines(callback) {
+  loadJSON('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/datavis/assets/wmata_data.json',
+    callback
+  );
 }
 
 function drawStations(stations) {
   if (!stations) return;
   stations.forEach(station => {
     if (station && station.lat && station.lon) {
-      let coords = mapCoordsToCanvasCoords(station.lat, station.lon);
-      pg.ellipse(coords.x, coords.y, 5, 5);
+      pg.circle(station.x, station.y, 3);
     }
   });
 }
 
+//ok this doesnt work because some stations overlap but i might not use this anyway
+function connectStations(lineCode, stations) {
+  if (!stations) return;
+  for (let i = 0; i < stations.length - 1; i++) {
+    let stationA = stations[i];
+    let stationB = stations[i + 1];
+    pg.push();
+    pg.strokeWeight(6);
+    pg.stroke(lineColor(lineCode));
+    pg.line(stationA.x, stationA.y, stationB.x, stationB.y);
+    pg.pop();
+  }
+}
+
+
+function assignCanvasCoordsToStations() {
+  for (let lineCode in lines) {
+    for (let i = 0; i < lines[lineCode].stations.length; i++) {
+      let coords = mapCoordsToCanvasCoords(lines[lineCode].stations[i].lat, lines[lineCode].stations[i].lon);
+      lines[lineCode].stations[i].x = coords.x;
+      lines[lineCode].stations[i].y = coords.y;
+    }
+  }
+}
+
+function offsetCanvasCoordsOnOverlappingStations() {
+  // Create a map to track which stations appear in multiple lines
+  let stationOccurrences = {};
+
+  // First pass: count how many lines each station appears in
+  for (let lineCode in lines) {
+    for (let station of lines[lineCode].stations) {
+      if (!stationOccurrences[station.code]) {
+        stationOccurrences[station.code] = [];
+      }
+      stationOccurrences[station.code].push({ lineCode, station });
+    }
+  }
+
+  // Second pass: apply offsets to overlapping stations
+  for (let stationCode in stationOccurrences) {
+    let occurrences = stationOccurrences[stationCode];
+
+    // Only offset if station appears in multiple lines
+    if (occurrences.length > 1) {
+      let xOffsetStep = 4; // Pixels to offset each station horizontally
+
+      for (let index = 0; index < occurrences.length; index++) {
+        let occurrence = occurrences[index];
+        let xOffset = index * xOffsetStep;
+
+        // Apply X offset to the station in this specific line
+        occurrence.station.x += xOffset;
+      }
+
+      console.log(`Offset station ${stationCode} across ${occurrences.length} lines with X offsets`);
+    }
+  }
+}
+
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(500, 500);
   pg = createGraphics(width - (margin * 2), height - (margin * 2));
 
-  // Load all data asynchronously
-  loadAllData();
+  loadLines(function (data) {
+    lines = data;
+    assignCanvasCoordsToStations();
+    offsetCanvasCoordsOnOverlappingStations();
+    dataLoaded = true;
+    // Add your additional API calls here
+    // For example:
+    // loadAdditionalData();
+    // processStationDetails();
+  });
 }
 
 function draw() {
@@ -163,8 +134,8 @@ function draw() {
   // Draw all the metro lines
   for (let lineCode in lines) {
     if (lines[lineCode].stations) {
-      pg.fill(lineColor(lineCode));
       drawStations(lines[lineCode].stations);
+      connectStations(lineCode, lines[lineCode].stations);
     }
   }
 
