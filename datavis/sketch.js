@@ -11,6 +11,7 @@ function getRandomFloat(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+
 class Train {
   constructor(line, targetStationIdx, direction) {
     this.line = line;

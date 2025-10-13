@@ -645,28 +645,10 @@
     "endStationCode": "G05",
     "stations": [
       {
-        "code": "N06",
-        "name": "Wiehle-Reston East",
-        "lat": 38.947753,
-        "lon": -77.340179
-      },
-      {
         "code": "N12",
         "name": "Ashburn",
         "lat": 39.005283,
         "lon": -77.491537
-      },
-      {
-        "code": "N04",
-        "name": "Spring Hill",
-        "lat": 38.929273,
-        "lon": -77.241988
-      },
-      {
-        "code": "N03",
-        "name": "Greensboro",
-        "lat": 38.919749,
-        "lon": -77.235192
       },
       {
         "code": "N02",
