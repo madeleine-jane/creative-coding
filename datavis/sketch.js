@@ -184,6 +184,7 @@ function setup() {
       lines = data;
       assignCanvasCoordsToStations();
       offsetCanvasCoordsOnOverlappingStations();
+      console.log(lines.SV);
     }
   );
 
