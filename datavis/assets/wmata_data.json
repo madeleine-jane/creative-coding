@@ -651,36 +651,6 @@
         "lon": -77.340179
       },
       {
-        "code": "N07",
-        "name": "Reston Town Center",
-        "lat": 38.952768,
-        "lon": -77.360185
-      },
-      {
-        "code": "N08",
-        "name": "Herndon",
-        "lat": 38.952821,
-        "lon": -77.385178
-      },
-      {
-        "code": "N09",
-        "name": "Innovation Center",
-        "lat": 38.960758,
-        "lon": -77.415295
-      },
-      {
-        "code": "N10",
-        "name": "Washington Dulles International Airport",
-        "lat": 38.955784,
-        "lon": -77.448148
-      },
-      {
-        "code": "N11",
-        "name": "Loudoun Gateway",
-        "lat": 38.99204,
-        "lon": -77.460685
-      },
-      {
         "code": "N12",
         "name": "Ashburn",
         "lat": 39.005283,
