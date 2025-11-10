@@ -134,18 +134,18 @@ let pixelSize = 20;
 let pinkGrid = [];
 
 function preload() {
-  img = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/art_squig.png', () => {
-    pixelatedImages.push({ pixelSize: 1, img: img }); // Original image
-    let pixelSteps = [10, 30, 50, 100];
-    for (let size of pixelSteps) {
-      pixelatedImages.push({ pixelSize: size, img: pixelateImage(img, size) });
-    }
-    createCanvas(400, 554);
-    image(img, 0, 0, width, height);
-    setNextStage();
-  });
+  // img = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/art_squig.png', () => {
+  //   pixelatedImages.push({ pixelSize: 1, img: img }); // Original image
+  //   let pixelSteps = [10, 30, 50, 100];
+  //   for (let size of pixelSteps) {
+  //     pixelatedImages.push({ pixelSize: size, img: pixelateImage(img, size) });
+  //   }
+  //   image(img, 0, 0, width, height);
+  //   setNextStage();
+  // });
 
-  green = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/green.png', () => {
+  green = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/green_test.png', () => {
+    createCanvas(400, 554);
     image(green, 0, 0, width, height);
     for (let x = 0; x < width; x += pixelSize) {
       for (let y = 0; y < height; y += pixelSize) {
@@ -154,18 +154,26 @@ function preload() {
     }
   });
 
-  pink = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/pink.png');
+  pink = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/pink_test.png');
 }
 
-
 function choosePixelToDraw() {
+  // Collect indices of all undrawn pixels
+  let undrawnIndices = [];
   for (let i = 0; i < pinkGrid.length; i++) {
     if (!pinkGrid[i].drawn) {
-      pinkGrid[i].drawn = true;
-      return pinkGrid[i];
+      undrawnIndices.push(i);
     }
   }
-  return null;
+  // If there are no undrawn pixels, return -1
+  if (undrawnIndices.length === 0) {
+    return null;
+  }
+  // Return a random index from the undrawnIndices array
+  let randIdx = floor(random(undrawnIndices.length));
+
+  pinkGrid[randIdx].drawn = true;
+  return pinkGrid[randIdx];
 }
 
 function draw() {
@@ -173,10 +181,13 @@ function draw() {
     return;
   }
 
-  let pixel = choosePixelToDraw();
-  if (pixel != null) {
-    let pixelToDraw = pink.get(pixel.x, pixel.y, pixelSize, pixelSize);
-    image(pixelToDraw, pixel.x, pixel.y, pixelSize, pixelSize);
+
+  for (let i = 0; i < 30; i++) {
+    let pixel = choosePixelToDraw();
+    if (pixel != null) {
+      let pixelToDraw = pink.get(pixel.x, pixel.y, pixelSize, pixelSize);
+      image(pixelToDraw, pixel.x, pixel.y, pixelSize, pixelSize);
+    }
   }
 
 
