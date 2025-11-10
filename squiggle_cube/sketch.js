@@ -141,7 +141,7 @@ function preload() {
       pixelatedImages.push({ pixelSize: size, img: pixelateImage(img, size) });
     }
     createCanvas(400, 554);
-    // image(img, 0, 0, width, height);
+    image(img, 0, 0, width, height);
     setNextStage();
   });
 
@@ -153,6 +153,7 @@ function preload() {
       }
     }
   });
+
   pink = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/pink.png');
 }
 
