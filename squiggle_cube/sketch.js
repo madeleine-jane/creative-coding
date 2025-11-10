@@ -1,8 +1,8 @@
 let img;
-let currentStateIndex = 0;
-let pixelatedImages = []
+let currentImageIndex = 0;
+let pixelatedImages = [];
 
-let state = [];
+let stagePixels = [];
 
 function pixelateImage(sourceImg, pixelSize) {
   let pixelatedImg = createImage(sourceImg.width, sourceImg.height);
@@ -36,6 +36,103 @@ function pixelateImage(sourceImg, pixelSize) {
 }
 
 
+
+function setup() {
+}
+
+let goingUp = true;
+
+function nextImageIndex() {
+
+  if (goingUp) {
+    if (currentImageIndex < pixelatedImages.length - 1) {
+      return currentImageIndex + 1;
+    } else {
+      goingUp = false;
+      return currentImageIndex - 1;
+    }
+  } else {
+    if (currentImageIndex > 0) {
+      return currentImageIndex - 1;
+    } else {
+      goingUp = true;
+      return currentImageIndex + 1;
+    }
+  }
+}
+
+function stageComplete() {
+  for (let stagePixel of stagePixels) {
+    if (!stagePixel.drawn) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function setNextStage() {
+  console.log(currentImageIndex);
+  currentImageIndex = nextImageIndex();
+  console.log(currentImageIndex);
+  stagePixels = [];
+  let nextImage = pixelatedImages[currentImageIndex];
+
+  // iterate by the pixel block size so each stage pixel corresponds to a block
+  for (let i = 0; i < width; i += nextImage.pixelSize) {
+    for (let j = 0; j < height; j += nextImage.pixelSize) {
+      stagePixels.push({ x: i, y: j, drawn: false });
+    }
+  }
+}
+
+function getPixelIdxToDraw() {
+  // Collect indices of all undrawn pixels
+  let undrawnIndices = [];
+  for (let i = 0; i < stagePixels.length; i++) {
+    if (!stagePixels[i].drawn) {
+      undrawnIndices.push(i);
+    }
+  }
+  // If there are no undrawn pixels, return -1
+  if (undrawnIndices.length === 0) {
+    return -1;
+  }
+  // Return a random index from the undrawnIndices array
+  let randIdx = floor(random(undrawnIndices.length));
+  return undrawnIndices[randIdx];
+}
+
+function drawStagePixel() {
+  let drawIdx = getPixelIdxToDraw();
+  if (drawIdx < 0) {
+    return;
+  }
+
+  stagePixels[drawIdx].drawn = true;
+
+  let x = stagePixels[drawIdx].x;
+  let y = stagePixels[drawIdx].y;
+  let w = pixelatedImages[currentImageIndex].pixelSize;
+
+  let pixelToDraw = pixelatedImages[currentImageIndex].img.get(x, y, w, w);
+  image(pixelToDraw, x, y, w, w);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+let green, pink;
+let pixelSize = 20;
+let pinkGrid = [];
+
 function preload() {
   img = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/art_squig.png', () => {
     pixelatedImages.push({ pixelSize: 1, img: img }); // Original image
@@ -43,38 +140,44 @@ function preload() {
     for (let size of pixelSteps) {
       pixelatedImages.push({ pixelSize: size, img: pixelateImage(img, size) });
     }
+    createCanvas(400, 554);
+    // image(img, 0, 0, width, height);
+    setNextStage();
   });
-}
 
-function setup() {
-  createCanvas(400, 400);
-}
-
-let goingUp = true;
-function nextStateIndex() {
-  if (goingUp) {
-    if (currentStateIndex < states.length - 1) {
-      return currentStateIndex + 1;
-    } else {
-      goingUp = false;
-      return currentStateIndex - 1;
+  green = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/green.png', () => {
+    image(green, 0, 0, width, height);
+    for (let x = 0; x < width; x += pixelSize) {
+      for (let y = 0; y < height; y += pixelSize) {
+        pinkGrid.push({ x: x, y: y, drawn: false });
+      }
     }
-  } else {
-    if (currentStateIndex > 0) {
-      return currentStateIndex - 1;
-    } else {
-      goingUp = true;
-      return currentStateIndex + 1;
+  });
+  pink = loadImage('https://raw.githubusercontent.com/madeleine-jane/creative-coding/main/squiggle_cube/assets/pink.png');
+}
+
+
+function choosePixelToDraw() {
+  for (let i = 0; i < pinkGrid.length; i++) {
+    if (!pinkGrid[i].drawn) {
+      pinkGrid[i].drawn = true;
+      return pinkGrid[i];
     }
   }
+  return null;
 }
-
-
 
 function draw() {
-
-  if (pixelatedImages.length == 0) {
+  if (green == null || pink == null) {
     return;
   }
-  image(pixelatedImages[2]);
+
+  let pixel = choosePixelToDraw();
+  if (pixel != null) {
+    let pixelToDraw = pink.get(pixel.x, pixel.y, pixelSize, pixelSize);
+    image(pixelToDraw, pixel.x, pixel.y, pixelSize, pixelSize);
+  }
+
+
+  // image(pixelatedImages[4].img, 0, 0, width, height);
 }
